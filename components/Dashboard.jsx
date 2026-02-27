@@ -100,6 +100,31 @@ function StoreFunnel(p){
   </div>;
 }
 
+// ═══ STORE CONVERSION ═══
+function StoreConversion(p){
+  var d=p.store,MO=p.months,cvR=rng(d.cv);
+  var cd=MO.map(function(m,i){return{m:m,c:d.cv[i]||0};});
+  return<div>
+    <CB title="Conversion Rate Over Time" h={280}><ComposedChart data={cd}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return v+"%";}}/><Tooltip content={TT}/><Area type="monotone" dataKey="c" fill={p.ac+"15"} stroke="none"/><Line type="monotone" dataKey="c" stroke={p.ac} strokeWidth={2.5} dot={{r:3,fill:p.ac}} name="Conv%"/></ComposedChart></CB>
+    <div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}><div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Monthly Heatmap</div><Leg/>
+    <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={{...thS,textAlign:"left"}}>Month</th><th style={{...thS,color:p.ac}}>Conv Rate</th></tr></thead>
+    <tbody>{MO.map(function(m,i){return<tr key={i}><MonC m={m} i={i} r1s={p.r1s} r1e={p.r1e} r2s={p.r2s} r2e={p.r2e}/><HC v={(d.cv[i]||0).toFixed(2)+"%"} val={d.cv[i]} lo={cvR.lo} hi={cvR.hi}/></tr>;})}</tbody></table></div>
+  </div>;
+}
+
+// ═══ STORE AOV & ORDERS ═══
+function StoreAOV(p){
+  var d=p.store,MO=p.months,avR=rng(d.av),orR=rng(d.or);
+  var cd=MO.map(function(m,i){return{m:m,a:d.av[i]||0,ap:d.ap[i]||0,o:d.or[i]||0};});
+  return<div>
+    <CB title="Average Order Value" h={280}><ComposedChart data={cd}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return "$"+v;}}/><Tooltip content={TT}/><Area type="monotone" dataKey="a" fill={p.ac+"15"} stroke="none"/><Line type="monotone" dataKey="a" stroke={p.ac} strokeWidth={2.5} dot={{r:3,fill:p.ac}} name="AOV"/><Line type="monotone" dataKey="ap" stroke={CL.am} strokeWidth={2} strokeDasharray="5 5" dot={{r:2,fill:CL.am}} name="Prior Year"/></ComposedChart></CB>
+    <CB title="Orders Over Time" h={250}><BarChart data={cd}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}}/><Tooltip content={TT}/><Bar dataKey="o" fill={p.ac} radius={[4,4,0,0]} name="Orders"/></BarChart></CB>
+    <div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}><div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Monthly Heatmap</div><Leg/>
+    <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={{...thS,textAlign:"left"}}>Month</th><th style={{...thS,color:p.ac}}>AOV</th><th style={thS}>Prior Year</th><th style={thS}>YoY%</th><th style={{...thS,color:p.ac}}>Orders</th></tr></thead>
+    <tbody>{MO.map(function(m,i){return<tr key={i}><MonC m={m} i={i} r1s={p.r1s} r1e={p.r1e} r2s={p.r2s} r2e={p.r2e}/><HC v={"$"+(d.av[i]||0).toFixed(2)} val={d.av[i]} lo={avR.lo} hi={avR.hi}/><PlainTd>{"$"+(d.ap[i]||0).toFixed(2)}</PlainTd><YC val={yoy(d.av[i]||0,d.ap[i]||0)}/><HC v={Math.round(d.or[i]||0).toString()} val={d.or[i]} lo={orR.lo} hi={orR.hi}/></tr>;})}</tbody></table></div>
+  </div>;
+}
+
 // ═══ STORE TRAFFIC ═══
 function StoreTraffic(p){var d=p.store;return<div><Ins type="info">Traffic source data is aggregated for the full period.</Ins><div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}><div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Traffic Sources</div><Leg/><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={{...thS,textAlign:"left"}}>Source</th><th style={thS}>Sessions</th><th style={{...thS,color:p.ac}}>Conv%</th></tr></thead><tbody>{(d.rf||[]).map(function(r,i){return<tr key={i}><td style={{padding:"5px 6px",textAlign:"left",fontSize:10,fontWeight:600,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}>{r.n}</td><PlainTd>{r.s.toLocaleString()}</PlainTd><HC v={r.r>0?r.r+"%":"0%"} val={r.r} lo={0} hi={16}/></tr>;})}</tbody></table></div></div>;}
 
@@ -154,21 +179,29 @@ export default function Dashboard({ data }) {
   var projects=[{id:"all",label:"All Stores",ac:CL.al,icon:"\u2605",nm:"All Stores"},{id:"cp",label:"ColorProof",ac:CL.cp,icon:"C",nm:"ColorProof"},{id:"nb",label:"NeumaBeauty",ac:CL.nb,icon:"N",nm:"NeumaBeauty"},{id:"n4",label:"Number 4",ac:CL.n4,icon:"4",nm:"Number 4 Hair"}];
   var cur=projects[0];for(var pi=0;pi<projects.length;pi++){if(projects[pi].id===proj)cur=projects[pi];}
 
-  var tabs=[{id:"overview",label:"Overview"},{id:"sales",label:"Net Sales"},{id:"funnel",label:"Funnel"},{id:"traffic",label:"Traffic"},{id:"campaigns",label:"Campaigns"}];
+  var tabs=[{id:"overview",label:"Overview"},{id:"sales",label:"Net Sales"},{id:"conversion",label:"Conversion"},{id:"aov",label:"AOV & Orders"},{id:"funnel",label:"Funnel"},{id:"traffic",label:"Traffic"},{id:"campaigns",label:"Campaigns"}];
   var rp={r1s:r1s,r1e:r1e,r2s:r2s,r2e:r2e,months:MO};
   var sp=function(k){return{store:DS[k],ac:cur.ac,nm:cur.nm,months:MO,r1s:r1s,r1e:r1e,r2s:r2s,r2e:r2e};};
 
   function renderTab(){
     if(proj==="all"){
+      var allS={s:MO.map(function(_,i){return(DS.cp.s[i]||0)+(DS.nb.s[i]||0)+(DS.n4.s[i]||0);}),sp:MO.map(function(_,i){return(DS.cp.sp[i]||0)+(DS.nb.sp[i]||0)+(DS.n4.sp[i]||0);})};
+      var allF={se:MO.map(function(_,i){return(DS.cp.se[i]||0)+(DS.nb.se[i]||0)+(DS.n4.se[i]||0);}),ca:MO.map(function(_,i){return(DS.cp.ca[i]||0)+(DS.nb.ca[i]||0)+(DS.n4.ca[i]||0);}),rc:MO.map(function(_,i){return(DS.cp.rc[i]||0)+(DS.nb.rc[i]||0)+(DS.n4.rc[i]||0);}),ck:MO.map(function(_,i){return(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0);})};
+      var allCV={cv:MO.map(function(_,i){var se=(DS.cp.se[i]||0)+(DS.nb.se[i]||0)+(DS.n4.se[i]||0);var ck=(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0);return se>0?(ck/se*100):0;})};
+      var allAOV={av:MO.map(function(_,i){var tS=(DS.cp.s[i]||0)+(DS.nb.s[i]||0)+(DS.n4.s[i]||0);var tO=(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);return tO>0?tS/tO:0;}),ap:MO.map(function(_,i){var tS=(DS.cp.sp[i]||0)+(DS.nb.sp[i]||0)+(DS.n4.sp[i]||0);var tO=(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);return tO>0?tS/tO:0;}),or:MO.map(function(_,i){return(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);})};
       if(tab==="overview")return<AllOverview DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
-      if(tab==="sales")return<StoreSales store={{s:MO.map(function(_,i){return(DS.cp.s[i]||0)+(DS.nb.s[i]||0)+(DS.n4.s[i]||0);}),sp:MO.map(function(_,i){return(DS.cp.sp[i]||0)+(DS.nb.sp[i]||0)+(DS.n4.sp[i]||0);})}} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
-      if(tab==="funnel")return<StoreFunnel store={{se:MO.map(function(_,i){return(DS.cp.se[i]||0)+(DS.nb.se[i]||0)+(DS.n4.se[i]||0);}),ca:MO.map(function(_,i){return(DS.cp.ca[i]||0)+(DS.nb.ca[i]||0)+(DS.n4.ca[i]||0);}),rc:MO.map(function(_,i){return(DS.cp.rc[i]||0)+(DS.nb.rc[i]||0)+(DS.n4.rc[i]||0);}),ck:MO.map(function(_,i){return(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0);})}} ac={CL.al} nm="All Stores" months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
+      if(tab==="sales")return<StoreSales store={allS} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
+      if(tab==="conversion")return<StoreConversion store={allCV} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
+      if(tab==="aov")return<StoreAOV store={allAOV} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
+      if(tab==="funnel")return<StoreFunnel store={allF} ac={CL.al} nm="All Stores" months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="traffic")return<StoreTraffic store={{rf:[]}} ac={CL.al}/>;
       if(tab==="campaigns")return<StoreCampaign store={{ut:[]}} ac={CL.al}/>;
     }else{
       var k=proj;
       if(tab==="overview")return<StoreOverview {...sp(k)}/>;
       if(tab==="sales")return<StoreSales {...sp(k)}/>;
+      if(tab==="conversion")return<StoreConversion {...sp(k)}/>;
+      if(tab==="aov")return<StoreAOV {...sp(k)}/>;
       if(tab==="funnel")return<StoreFunnel {...sp(k)}/>;
       if(tab==="traffic")return<StoreTraffic store={DS[k]} ac={cur.ac}/>;
       if(tab==="campaigns")return<StoreCampaign store={DS[k]} ac={cur.ac}/>;
