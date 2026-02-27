@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ReferenceLine, ComposedChart, Line, BarChart, Bar, Area,
+  ReferenceLine, ComposedChart, Line, BarChart, Bar, Area, Cell,
 } from "recharts";
 
 var CL = { bg:"#0B0F1A", cd:"#131825", bd:"#1E2A42", gn:"#22C55E", rd:"#EF4444", am:"#F59E0B", tx:"#E2E8F0", mt:"#94A3B8", dm:"#64748B", gr:"#1E293B", cp:"#818CF8", nb:"#34D399", n4:"#F9A8D4", al:"#C4B5FD" };
@@ -527,8 +527,172 @@ function AllTraffic(p){
   </div>;
 }
 
-// ═══ STORE CAMPAIGN ═══
-function StoreCampaign(p){var d=p.store,revR=rng((d.ut||[]).map(function(u){return u.sa;}));return<div><Ins type="info">Campaign data is aggregated for the full period.</Ins><div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}><div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Campaign Detail</div><Leg/><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={{...thS,textAlign:"left"}}>Channel</th><th style={thS}>Sessions</th><th style={{...thS,color:p.ac}}>Revenue</th><th style={thS}>Orders</th><th style={thS}>Conv%</th></tr></thead><tbody>{(d.ut||[]).map(function(u,i){return<tr key={i}><td style={{padding:"5px 6px",textAlign:"left",fontSize:10,fontWeight:600,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:u.cl,marginRight:5}}/>{u.ch}</td><PlainTd>{u.se.toLocaleString()}</PlainTd><HC v={f$(u.sa)} val={u.sa} lo={0} hi={revR.hi}/><PlainTd>{u.or}</PlainTd><HC v={u.cv+"%"} val={u.cv} lo={0} hi={52}/></tr>;})}</tbody></table></div></div>;}
+// ═══ STORE CAMPAIGN (single store - full metrics) ═══
+function StoreCampaign(p){
+  var d=p.store,ac=p.ac;
+  var camps=d.ut||[];
+  var chans=d.uc||[];
+  var revR=rng(camps.map(function(u){return u.sa;}));
+  var seR=rng(camps.map(function(u){return u.se;}));
+  var aovR=rng(camps.filter(function(u){return u.av>0;}).map(function(u){return u.av;}));
+
+  // Summary cards
+  var totSe=0,totSa=0,totOr=0;
+  camps.forEach(function(c){totSe+=c.se;totSa+=c.sa;totOr+=c.or;});
+  var totCv=totSe>0?parseFloat((totOr/totSe*100).toFixed(1)):0;
+  var totAov=totOr>0?totSa/totOr:0;
+
+  // Bar chart data from channels
+  var barData=chans.map(function(ch){return{n:ch.ch,se:ch.se,sa:ch.sa,or:ch.or};});
+
+  return<div>
+    <div style={{marginBottom:12,marginTop:18}}><h2 style={{fontSize:15,fontWeight:700,color:CL.tx,margin:0}}>Campaign Performance</h2></div>
+
+    {/* Summary cards */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:9,marginBottom:14}}>
+      {[{l:"Total Sessions",v:totSe.toLocaleString()},{l:"Total Revenue",v:f$(totSa)},{l:"Total Orders",v:totOr.toLocaleString()},{l:"Conv Rate",v:totCv+"%"},{l:"Avg AOV",v:"$"+totAov.toFixed(2)}].map(function(c,i){return<div key={i} style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:13}}><div style={{fontSize:9,color:CL.mt,fontWeight:600,textTransform:"uppercase",marginBottom:3}}>{c.l}</div><div style={{fontSize:16,fontWeight:700,color:CL.tx}}>{c.v}</div></div>;})}
+    </div>
+
+    {/* Channel summary bar chart */}
+    {barData.length>0&&<CB title="Revenue by Channel" h={250}><BarChart data={barData} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis type="number" tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return"$"+(v/1000).toFixed(0)+"k";}}/><YAxis type="category" dataKey="n" tick={{fontSize:9,fill:CL.dm}} width={100}/><Tooltip content={TT}/><Bar dataKey="sa" fill={ac} radius={[0,4,4,0]} name="Revenue"/></BarChart></CB>}
+
+    {/* Channel Summary Table */}
+    {chans.length>0&&<div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}>
+      <div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Channel Summary</div><Leg/>
+      <table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr><th style={{...thS,textAlign:"left"}}>Channel</th><th style={thS}>Campaigns</th><th style={thS}>Sessions</th><th style={{...thS,color:ac}}>Revenue</th><th style={thS}>Orders</th><th style={thS}>Conv%</th><th style={thS}>AOV</th></tr></thead>
+        <tbody>{chans.map(function(ch,i){return<tr key={i}>
+          <td style={{padding:"5px 6px",textAlign:"left",fontSize:10,fontWeight:600,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:ch.cl,marginRight:5}}/>{ch.ch}</td>
+          <PlainTd>{ch.campaigns}</PlainTd>
+          <PlainTd>{ch.se.toLocaleString()}</PlainTd>
+          <HC v={f$(ch.sa)} val={ch.sa} lo={0} hi={revR.hi}/>
+          <PlainTd>{ch.or}</PlainTd>
+          <HC v={ch.cv+"%"} val={ch.cv} lo={0} hi={20}/>
+          <PlainTd>{"$"+ch.av.toFixed(2)}</PlainTd>
+        </tr>;})}</tbody>
+      </table>
+    </div>}
+
+    {/* Full Campaign Detail Table */}
+    {camps.length>0&&<div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}>
+      <div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Campaign Detail</div><Leg/>
+      <table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr><th style={{...thS,textAlign:"left",minWidth:150}}>Campaign</th><th style={{...thS,textAlign:"left"}}>Channel</th><th style={thS}>Sessions</th><th style={{...thS,color:ac}}>Revenue</th><th style={thS}>Orders</th><th style={thS}>Conv%</th><th style={thS}>AOV</th></tr></thead>
+        <tbody>{camps.slice(0,30).map(function(u,i){return<tr key={i}>
+          <td style={{padding:"5px 6px",textAlign:"left",fontSize:10,fontWeight:600,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={u.nm}>{u.nm}</td>
+          <td style={{padding:"5px 6px",textAlign:"left",fontSize:9,color:CL.mt,borderBottom:"1px solid "+CL.bd+"20"}}><span style={{display:"inline-block",width:6,height:6,borderRadius:"50%",background:u.cl,marginRight:4}}/>{u.ch}</td>
+          <HC v={u.se.toLocaleString()} val={u.se} lo={seR.lo} hi={seR.hi}/>
+          <HC v={f$(u.sa)} val={u.sa} lo={0} hi={revR.hi}/>
+          <PlainTd>{u.or}</PlainTd>
+          <HC v={u.cv+"%"} val={u.cv} lo={0} hi={20}/>
+          <HC v={"$"+u.av.toFixed(2)} val={u.av} lo={aovR.lo} hi={aovR.hi}/>
+        </tr>;})}</tbody>
+      </table>
+      {camps.length>30&&<div style={{fontSize:9,color:CL.dm,padding:"6px 0",textAlign:"center"}}>Showing top 30 of {camps.length} campaigns</div>}
+    </div>}
+  </div>;
+}
+
+// ═══ ALL STORES CAMPAIGN (multi-store view) ═══
+function AllCampaign(p){
+  var DS=p.DS;
+  var stores=[
+    {k:"cp",n:"ColorProof",c:CL.cp,d:DS.cp},
+    {k:"nb",n:"NeumaBeauty",c:CL.nb,d:DS.nb},
+    {k:"n4",n:"Number 4",c:CL.n4,d:DS.n4}
+  ];
+
+  // Per-store totals
+  var stTotals=stores.map(function(st){
+    var camps=st.d.ut||[];
+    var se=0,sa=0,or2=0;
+    camps.forEach(function(c){se+=c.se;sa+=c.sa;or2+=c.or;});
+    return{n:st.n,c:st.c,se:se,sa:sa,or:or2,cv:se>0?parseFloat((or2/se*100).toFixed(1)):0,av:or2>0?parseFloat((sa/or2).toFixed(2)):0,camps:camps.length};
+  });
+  var grandSe=0,grandSa=0,grandOr=0;
+  stTotals.forEach(function(s){grandSe+=s.se;grandSa+=s.sa;grandOr+=s.or;});
+
+  // Bar chart data for revenue by store
+  var barData=stTotals.map(function(s){return{n:s.n,sa:s.sa,se:s.se,or:s.or};});
+
+  // Merge all channels across stores for combined view
+  var allChannels={};
+  stores.forEach(function(st){
+    (st.d.uc||[]).forEach(function(ch){
+      var key=ch.ch;
+      if(!allChannels[key])allChannels[key]={ch:key,cpSe:0,cpSa:0,nbSe:0,nbSa:0,n4Se:0,n4Sa:0,totSe:0,totSa:0,totOr:0,cl:ch.cl};
+      if(st.k==="cp"){allChannels[key].cpSe+=ch.se;allChannels[key].cpSa+=ch.sa;}
+      if(st.k==="nb"){allChannels[key].nbSe+=ch.se;allChannels[key].nbSa+=ch.sa;}
+      if(st.k==="n4"){allChannels[key].n4Se+=ch.se;allChannels[key].n4Sa+=ch.sa;}
+      allChannels[key].totSe+=ch.se;allChannels[key].totSa+=ch.sa;allChannels[key].totOr+=ch.or;
+    });
+  });
+  var chanList=Object.values(allChannels).sort(function(a,b){return b.totSa-a.totSa;});
+  var chRevR=rng(chanList.map(function(c){return c.totSa;}));
+
+  return<div>
+    <div style={{marginBottom:12,marginTop:18}}><h2 style={{fontSize:15,fontWeight:700,color:CL.tx,margin:0}}>Campaign Performance — All Stores</h2></div>
+
+    {/* Summary cards */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:9,marginBottom:14}}>
+      {[{l:"Total Sessions",v:grandSe.toLocaleString()},{l:"Total Revenue",v:f$(grandSa)},{l:"Total Orders",v:grandOr.toLocaleString()},{l:"Conv Rate",v:(grandSe>0?(grandOr/grandSe*100).toFixed(1):"0")+"%"},{l:"Avg AOV",v:"$"+(grandOr>0?(grandSa/grandOr).toFixed(2):"0")}].map(function(c,i){return<div key={i} style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:13}}><div style={{fontSize:9,color:CL.mt,fontWeight:600,textTransform:"uppercase",marginBottom:3}}>{c.l}</div><div style={{fontSize:16,fontWeight:700,color:CL.tx}}>{c.v}</div></div>;})}
+    </div>
+
+    {/* Revenue by Store bar chart */}
+    <CB title="Campaign Revenue by Store" h={200}><BarChart data={barData}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="n" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return"$"+(v/1000).toFixed(0)+"k";}}/><Tooltip content={TT}/><Bar dataKey="sa" name="Revenue" radius={[0,4,4,0]}>{barData.map(function(e,i){return<Cell key={i} fill={stTotals[i].c}/>;})}</Bar></BarChart></CB>
+
+    {/* Per-store comparison table */}
+    <div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}>
+      <div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:8}}>Store Comparison</div>
+      <table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr><th style={{...thS,textAlign:"left"}}>Store</th><th style={thS}>Campaigns</th><th style={thS}>Sessions</th><th style={thS}>Revenue</th><th style={thS}>Orders</th><th style={thS}>Conv%</th><th style={thS}>AOV</th></tr></thead>
+        <tbody>
+          {stTotals.map(function(s,i){return<tr key={i}>
+            <td style={{padding:"5px 6px",textAlign:"left",fontSize:10,fontWeight:600,color:s.c,borderBottom:"1px solid "+CL.bd+"20"}}>{s.n}</td>
+            <PlainTd>{s.camps}</PlainTd>
+            <PlainTd>{s.se.toLocaleString()}</PlainTd>
+            <HC v={f$(s.sa)} val={s.sa} lo={0} hi={Math.max.apply(null,stTotals.map(function(x){return x.sa;}))}/>
+            <PlainTd>{s.or}</PlainTd>
+            <HC v={s.cv+"%"} val={s.cv} lo={0} hi={20}/>
+            <PlainTd>{"$"+s.av.toFixed(2)}</PlainTd>
+          </tr>;})}
+          <tr style={{borderTop:"2px solid "+CL.bd}}>
+            <td style={{padding:"5px 6px",textAlign:"left",fontSize:10,fontWeight:700,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}>Combined</td>
+            <PlainTd>{stTotals.reduce(function(a,b){return a+b.camps;},0)}</PlainTd>
+            <PlainTd>{grandSe.toLocaleString()}</PlainTd>
+            <td style={{padding:"5px 6px",textAlign:"center",fontSize:10,fontWeight:700,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}>{f$(grandSa)}</td>
+            <PlainTd>{grandOr}</PlainTd>
+            <td style={{padding:"5px 6px",textAlign:"center",fontSize:10,fontWeight:700,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}>{grandSe>0?(grandOr/grandSe*100).toFixed(1):"0"}%</td>
+            <PlainTd>{"$"+(grandOr>0?(grandSa/grandOr).toFixed(2):"0")}</PlainTd>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {/* Cross-store channel heatmap */}
+    {chanList.length>0&&<div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}>
+      <div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Channel Revenue by Store</div><Leg/>
+      <table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead><tr>
+          <th style={{...thS,textAlign:"left"}}>Channel</th>
+          <th style={{...thS,color:CL.cp}}>CP Rev</th>
+          <th style={{...thS,color:CL.nb}}>NB Rev</th>
+          <th style={{...thS,color:CL.n4}}>N4 Rev</th>
+          <th style={thS}>Total Rev</th>
+          <th style={thS}>Sessions</th>
+        </tr></thead>
+        <tbody>{chanList.map(function(ch,i){return<tr key={i}>
+          <td style={{padding:"5px 6px",textAlign:"left",fontSize:10,fontWeight:600,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:ch.cl,marginRight:5}}/>{ch.ch}</td>
+          <HC v={f$(ch.cpSa)} val={ch.cpSa} lo={0} hi={chRevR.hi}/>
+          <HC v={f$(ch.nbSa)} val={ch.nbSa} lo={0} hi={chRevR.hi}/>
+          <HC v={f$(ch.n4Sa)} val={ch.n4Sa} lo={0} hi={chRevR.hi}/>
+          <HC v={f$(ch.totSa)} val={ch.totSa} lo={0} hi={chRevR.hi} bold={true}/>
+          <PlainTd>{ch.totSe.toLocaleString()}</PlainTd>
+        </tr>;})}</tbody>
+      </table>
+    </div>}
+  </div>;
+}
 
 // ═══ ALL STORES OVERVIEW ═══
 function AllOverview(p){
@@ -594,7 +758,7 @@ export default function Dashboard({ data }) {
       if(tab==="aov")return<AllAOV DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="funnel")return<AllFunnel DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="traffic")return<AllTraffic DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
-      if(tab==="campaigns")return<StoreCampaign store={{ut:[]}} ac={CL.al}/>;
+      if(tab==="campaigns")return<AllCampaign DS={DS}/>;
     }else{
       var k=proj;
       if(tab==="overview")return<StoreOverview {...sp(k)}/>;
