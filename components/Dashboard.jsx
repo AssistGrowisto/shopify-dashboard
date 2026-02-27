@@ -100,7 +100,7 @@ function StoreFunnel(p){
   </div>;
 }
 
-// ═══ STORE CONVERSION ═══
+// ═══ STORE CONVERSION (single store) ═══
 function StoreConversion(p){
   var d=p.store,MO=p.months,cvR=rng(d.cv);
   var cd=MO.map(function(m,i){return{m:m,c:d.cv[i]||0};});
@@ -109,6 +109,95 @@ function StoreConversion(p){
     <div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}><div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Monthly Heatmap</div><Leg/>
     <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={{...thS,textAlign:"left"}}>Month</th><th style={{...thS,color:p.ac}}>Conv Rate</th></tr></thead>
     <tbody>{MO.map(function(m,i){return<tr key={i}><MonC m={m} i={i} r1s={p.r1s} r1e={p.r1e} r2s={p.r2s} r2e={p.r2e}/><HC v={(d.cv[i]||0).toFixed(2)+"%"} val={d.cv[i]} lo={cvR.lo} hi={cvR.hi}/></tr>;})}</tbody></table></div>
+  </div>;
+}
+
+// ═══ ALL STORES CONVERSION (multi-store view) ═══
+function AllConversion(p){
+  var DS=p.DS,MO=p.months,r1s=p.r1s,r1e=p.r1e,r2s=p.r2s,r2e=p.r2e;
+
+  // Build chart data with per-store conversion rates and sessions
+  var cd=MO.map(function(m,i){
+    return{
+      m:m,
+      cpC:DS.cp.cv[i]||0, nbC:DS.nb.cv[i]||0, n4C:DS.n4.cv[i]||0,
+      cpSe:DS.cp.se[i]||0, nbSe:DS.nb.se[i]||0, n4Se:DS.n4.se[i]||0
+    };
+  });
+
+  // Ranges for heatmap coloring
+  var allRates=[].concat(DS.cp.cv||[],DS.nb.cv||[],DS.n4.cv||[]).filter(function(x){return x>0;});
+  var allSess=[].concat(DS.cp.se||[],DS.nb.se||[],DS.n4.se||[]).filter(function(x){return x>0;});
+  var rateR={lo:allRates.length?Math.min.apply(null,allRates):0,hi:allRates.length?Math.max.apply(null,allRates):1};
+  var sessR={lo:allSess.length?Math.min.apply(null,allSess):0,hi:allSess.length?Math.max.apply(null,allSess):1};
+
+  return<div>
+    <div style={{marginBottom:12,marginTop:18}}><h2 style={{fontSize:15,fontWeight:700,color:CL.tx,margin:0}}>Conversion & Sessions</h2><p style={{fontSize:11,color:CL.mt,margin:"2px 0 0"}}>All stores comparison</p></div>
+
+    {/* Multi-store Conversion Rate Line Chart */}
+    <CB title="Conversion Rate" h={280}>
+      <ComposedChart data={cd}>
+        <CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/>
+        <XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/>
+        <YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return v+"%";}}/>
+        <Tooltip content={TT}/>
+        <Line type="monotone" dataKey="cpC" stroke={CL.cp} strokeWidth={2.5} dot={{r:3,fill:CL.cp}} name="ColorProof"/>
+        <Line type="monotone" dataKey="nbC" stroke={CL.nb} strokeWidth={2.5} dot={{r:3,fill:CL.nb}} name="NeumaBeauty"/>
+        <Line type="monotone" dataKey="n4C" stroke={CL.n4} strokeWidth={2.5} dot={{r:3,fill:CL.n4}} name="Number 4"/>
+      </ComposedChart>
+    </CB>
+
+    {/* Stacked Sessions Bar Chart */}
+    <CB title="Sessions — Stacked" h={280}>
+      <BarChart data={cd}>
+        <CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/>
+        <XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/>
+        <YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return v>=1000?(v/1000).toFixed(0)+"k":v;}}/>
+        <Tooltip content={TT}/>
+        <Bar dataKey="cpSe" stackId="sessions" fill={CL.cp} name="ColorProof"/>
+        <Bar dataKey="nbSe" stackId="sessions" fill={CL.nb} name="NeumaBeauty"/>
+        <Bar dataKey="n4Se" stackId="sessions" fill={CL.n4} radius={[4,4,0,0]} name="Number 4"/>
+      </BarChart>
+    </CB>
+
+    {/* Cross-Store Heatmap Table */}
+    <div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}>
+      <div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Cross-Store Heatmap</div>
+      <Leg/>
+      <table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead>
+          <tr>
+            <th style={{...thS,textAlign:"left"}}>Month</th>
+            <th style={{...thS,color:CL.cp}}>CP Rate</th>
+            <th style={{...thS,color:CL.cp}}>CP Sess</th>
+            <th style={{...thS,color:CL.nb}}>NB Rate</th>
+            <th style={{...thS,color:CL.nb}}>NB Sess</th>
+            <th style={{...thS,color:CL.n4}}>N4 Rate</th>
+            <th style={{...thS,color:CL.n4}}>N4 Sess</th>
+            <th style={thS}>Combined</th>
+          </tr>
+        </thead>
+        <tbody>
+          {MO.map(function(m,i){
+            var cpR2=DS.cp.cv[i]||0,nbR2=DS.nb.cv[i]||0,n4R2=DS.n4.cv[i]||0;
+            var cpS2=DS.cp.se[i]||0,nbS2=DS.nb.se[i]||0,n4S2=DS.n4.se[i]||0;
+            var totSe=cpS2+nbS2+n4S2;
+            var totCk=(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0);
+            var combined=totSe>0?(totCk/totSe*100):0;
+            return<tr key={i}>
+              <MonC m={m} i={i} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>
+              <HC v={cpR2.toFixed(2)+"%"} val={cpR2} lo={rateR.lo} hi={rateR.hi}/>
+              <HC v={cpS2.toLocaleString()} val={cpS2} lo={sessR.lo} hi={sessR.hi}/>
+              <HC v={nbR2.toFixed(2)+"%"} val={nbR2} lo={rateR.lo} hi={rateR.hi}/>
+              <HC v={nbS2.toLocaleString()} val={nbS2} lo={sessR.lo} hi={sessR.hi}/>
+              <HC v={n4R2.toFixed(2)+"%"} val={n4R2} lo={rateR.lo} hi={rateR.hi}/>
+              <HC v={n4S2.toLocaleString()} val={n4S2} lo={sessR.lo} hi={sessR.hi}/>
+              <HC v={combined.toFixed(2)+"%"} val={combined} lo={rateR.lo} hi={rateR.hi} bold={true}/>
+            </tr>;
+          })}
+        </tbody>
+      </table>
+    </div>
   </div>;
 }
 
@@ -191,7 +280,7 @@ export default function Dashboard({ data }) {
       var allAOV={av:MO.map(function(_,i){var tS=(DS.cp.s[i]||0)+(DS.nb.s[i]||0)+(DS.n4.s[i]||0);var tO=(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);return tO>0?tS/tO:0;}),ap:MO.map(function(_,i){var tS=(DS.cp.sp[i]||0)+(DS.nb.sp[i]||0)+(DS.n4.sp[i]||0);var tO=(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);return tO>0?tS/tO:0;}),or:MO.map(function(_,i){return(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);})};
       if(tab==="overview")return<AllOverview DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="sales")return<StoreSales store={allS} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
-      if(tab==="conversion")return<StoreConversion store={allCV} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
+      if(tab==="conversion")return<AllConversion DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="aov")return<StoreAOV store={allAOV} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="funnel")return<StoreFunnel store={allF} ac={CL.al} nm="All Stores" months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="traffic")return<StoreTraffic store={{rf:[]}} ac={CL.al}/>;
