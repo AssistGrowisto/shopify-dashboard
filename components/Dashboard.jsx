@@ -100,6 +100,104 @@ function StoreFunnel(p){
   </div>;
 }
 
+// ═══ ALL STORES FUNNEL (multi-store view) ═══
+function AllFunnel(p){
+  var DS=p.DS,MO=p.months,r1s=p.r1s,r1e=p.r1e,r2s=p.r2s,r2e=p.r2e;
+
+  // Combined totals for funnel panels (sum across months in each period, not average)
+  function sumR(arr,s,e){var t=0;for(var i=s;i<=e;i++)t+=(arr[i]||0);return t;}
+  var stores=[
+    {k:"cp",n:"ColorProof",c:CL.cp,d:DS.cp},
+    {k:"nb",n:"NeumaBeauty",c:CL.nb,d:DS.nb},
+    {k:"n4",n:"Number 4",c:CL.n4,d:DS.n4}
+  ];
+
+  // Combined funnel data
+  var cSe1=0,cCa1=0,cRc1=0,cCk1=0,cSe2=0,cCa2=0,cRc2=0,cCk2=0;
+  stores.forEach(function(st){
+    cSe1+=sumR(st.d.se,r1s,r1e);cCa1+=sumR(st.d.ca,r1s,r1e);cRc1+=sumR(st.d.rc,r1s,r1e);cCk1+=sumR(st.d.ck,r1s,r1e);
+    cSe2+=sumR(st.d.se,r2s,r2e);cCa2+=sumR(st.d.ca,r2s,r2e);cRc2+=sumR(st.d.rc,r2s,r2e);cCk2+=sumR(st.d.ck,r2s,r2e);
+  });
+
+  var stages=["Sessions","Add to Cart","Reached Checkout","Completed"];
+  var stgCol=[CL.dm,CL.am,"#3B82F6",CL.gn];
+  var fP1=[cSe1,cCa1,cRc1,cCk1],fP2=[cSe2,cCa2,cRc2,cCk2];
+
+  // Per-store pass-through rates for the table
+  function ptr(d){
+    var se1=sumR(d.se,r1s,r1e),ca1=sumR(d.ca,r1s,r1e),rc1=sumR(d.rc,r1s,r1e),ck1=sumR(d.ck,r1s,r1e);
+    var se2=sumR(d.se,r2s,r2e),ca2=sumR(d.ca,r2s,r2e),rc2=sumR(d.rc,r2s,r2e),ck2=sumR(d.ck,r2s,r2e);
+    return[
+      {l:"Sess \u2192 Cart",p1:se1>0?ca1/se1*100:0,p2:se2>0?ca2/se2*100:0},
+      {l:"Cart \u2192 Chk",p1:ca1>0?rc1/ca1*100:0,p2:ca2>0?rc2/ca2*100:0},
+      {l:"Chk \u2192 Complete",p1:rc1>0?ck1/rc1*100:0,p2:rc2>0?ck2/rc2*100:0},
+      {l:"Overall",p1:se1>0?ck1/se1*100:0,p2:se2>0?ck2/se2*100:0}
+    ];
+  }
+  var storeRates=stores.map(function(st){return{n:st.n,c:st.c,rates:ptr(st.d)};});
+  // Combined rates
+  var combRates=[
+    {l:"Sess \u2192 Cart",p1:cSe1>0?cCa1/cSe1*100:0,p2:cSe2>0?cCa2/cSe2*100:0},
+    {l:"Cart \u2192 Chk",p1:cCa1>0?cRc1/cCa1*100:0,p2:cCa2>0?cRc2/cCa2*100:0},
+    {l:"Chk \u2192 Complete",p1:cRc1>0?cCk1/cRc1*100:0,p2:cRc2>0?cCk2/cRc2*100:0},
+    {l:"Overall",p1:cSe1>0?cCk1/cSe1*100:0,p2:cSe2>0?cCk2/cSe2*100:0}
+  ];
+
+  function DeltaPill(p1,p2){var ch=p1>0?((p2-p1)/p1*100):0;var col=ch>=0?CL.gn:CL.rd;return<td style={{padding:"5px 4px",textAlign:"center",fontSize:10,borderBottom:"1px solid "+CL.bd+"20",background:ch>=0?"rgba(34,197,94,0.12)":"rgba(239,68,68,0.12)"}}><Pill color={col}>{ch>=0?"+":""}{ch.toFixed(1)}%</Pill></td>;}
+
+  return<div>
+    <div style={{marginBottom:12,marginTop:18}}><h2 style={{fontSize:15,fontWeight:700,color:CL.tx,margin:0}}>Conversion Funnel — All Stores</h2><p style={{fontSize:11,color:CL.mt,margin:"2px 0 0"}}><span style={{color:CL.am}}>P1: {pLabel(MO,r1s,r1e)}</span> vs <span style={{color:CL.al}}>P2: {pLabel(MO,r2s,r2e)}</span></p></div>
+
+    {/* Two-panel combined funnel */}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+      {[{label:"P1: "+pLabel(MO,r1s,r1e)+" (Combined)",data:fP1,col:CL.am},{label:"P2: "+pLabel(MO,r2s,r2e)+" (Combined)",data:fP2,col:CL.al}].map(function(per,pi){
+        var top=per.data[0];
+        return<div key={pi} style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14}}>
+          <div style={{fontSize:11,fontWeight:700,color:per.col,marginBottom:10}}>{per.label}</div>
+          {stages.map(function(st,si){var val=Math.round(per.data[si]);var pctT=top>0?(val/top*100):0;var barW=Math.max(pctT,2);var dropP=si>0&&per.data[si-1]>0?((per.data[si-1]-val)/per.data[si-1]*100).toFixed(1):null;
+            return<div key={si} style={{marginBottom:si<3?2:0}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2}}><span style={{fontSize:9,color:CL.mt,fontWeight:600}}>{st}</span><span style={{fontSize:10,fontWeight:700,color:CL.tx}}>{val.toLocaleString()} <span style={{fontSize:8,color:CL.dm}}>({pctT.toFixed(1)}%)</span></span></div><div style={{height:18,background:CL.bg,borderRadius:4,overflow:"hidden",marginBottom:1}}><div style={{height:"100%",width:barW+"%",background:stgCol[si],borderRadius:4}}/></div>{dropP&&<div style={{textAlign:"center",fontSize:8,color:CL.rd,fontWeight:600,padding:"1px 0"}}>{"\u25BC"} {dropP}% drop</div>}</div>;})}
+        </div>;})}
+    </div>
+
+    {/* Stage Pass-Through Rates Table */}
+    <div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}>
+      <div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:8}}>Stage Pass-Through Rates</div>
+      <table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead>
+          <tr>
+            <th style={{...thS,textAlign:"left",minWidth:100}} rowSpan={2}>Stage</th>
+            {storeRates.map(function(st){return<th key={st.n} colSpan={3} style={{...thS,color:st.c,borderBottom:"2px solid "+st.c}}>{st.n}</th>;})}
+            <th colSpan={3} style={{...thS,color:CL.tx,borderBottom:"2px solid "+CL.tx}}>Combined</th>
+          </tr>
+          <tr>
+            {storeRates.concat([{n:"comb",c:CL.tx}]).map(function(st,si){return[
+              <th key={si+"p1"} style={{...thS,color:CL.mt,fontSize:7}}>P1</th>,
+              <th key={si+"p2"} style={{...thS,color:CL.mt,fontSize:7}}>P2</th>,
+              <th key={si+"d"} style={{...thS,color:CL.mt,fontSize:7}}>{"\u0394"}</th>
+            ];})}
+          </tr>
+        </thead>
+        <tbody>
+          {[0,1,2,3].map(function(ri){
+            var row=combRates[ri];
+            return<tr key={ri}>
+              <td style={{padding:"6px 6px",textAlign:"left",fontSize:10,fontWeight:600,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}>{row.l}</td>
+              {storeRates.map(function(st,si){var r=st.rates[ri];return[
+                <td key={si+"p1"} style={{padding:"5px 4px",textAlign:"center",fontSize:10,color:CL.mt,borderBottom:"1px solid "+CL.bd+"20"}}>{r.p1.toFixed(1)}%</td>,
+                <td key={si+"p2"} style={{padding:"5px 4px",textAlign:"center",fontSize:10,fontWeight:600,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}>{r.p2.toFixed(1)}%</td>,
+                DeltaPill(r.p1,r.p2)
+              ];})}
+              <td style={{padding:"5px 4px",textAlign:"center",fontSize:10,color:CL.mt,borderBottom:"1px solid "+CL.bd+"20"}}>{row.p1.toFixed(1)}%</td>
+              <td style={{padding:"5px 4px",textAlign:"center",fontSize:10,fontWeight:600,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}>{row.p2.toFixed(1)}%</td>
+              {DeltaPill(row.p1,row.p2)}
+            </tr>;
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>;
+}
+
 // ═══ STORE CONVERSION (single store) ═══
 function StoreConversion(p){
   var d=p.store,MO=p.months,cvR=rng(d.cv);
@@ -282,7 +380,7 @@ export default function Dashboard({ data }) {
       if(tab==="sales")return<StoreSales store={allS} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="conversion")return<AllConversion DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="aov")return<StoreAOV store={allAOV} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
-      if(tab==="funnel")return<StoreFunnel store={allF} ac={CL.al} nm="All Stores" months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
+      if(tab==="funnel")return<AllFunnel DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="traffic")return<StoreTraffic store={{rf:[]}} ac={CL.al}/>;
       if(tab==="campaigns")return<StoreCampaign store={{ut:[]}} ac={CL.al}/>;
     }else{
