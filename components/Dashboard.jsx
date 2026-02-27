@@ -408,7 +408,7 @@ function StoreAOV(p){
   </div>;
 }
 
-// ═══ STORE TRAFFIC (single store with all session metrics) ═══
+// ═══ STORE TRAFFIC (single store with session metrics) ═══
 function StoreTraffic(p){
   var d=p.store,MO=p.months,ac=p.ac;
   var hasTM=d.se&&d.se.length>0;
@@ -419,9 +419,8 @@ function StoreTraffic(p){
     cv:d.cv[i]||0, cvp:d.cvp?d.cvp[i]||0:0,
     acr:d.acr?d.acr[i]||0:0, acrp:d.acrp?d.acrp[i]||0:0,
     ccr:d.ccr?d.ccr[i]||0:0, ccrp:d.ccrp?d.ccrp[i]||0:0,
-    pvs:d.pvs?d.pvs[i]||0:0, pvsp:d.pvsp?d.pvsp[i]||0:0,
-    br:d.br?d.br[i]||0:0, brp:d.brp?d.brp[i]||0:0,
-    asd:d.asd?d.asd[i]||0:0, asdp:d.asdp?d.asdp[i]||0:0
+    c2c:d.c2c?d.c2c[i]||0:0, c2cp:d.c2cp?d.c2cp[i]||0:0,
+    ca:d.ca[i]||0, rc:d.rc[i]||0, ck:d.ck[i]||0
   };}):[];
 
   function MetricChart(title,dk,dkp,h,fmt){
@@ -434,12 +433,12 @@ function StoreTraffic(p){
       {MetricChart("Sessions","se","sep",250,function(v){return v>=1000?(v/1000).toFixed(0)+"k":v;})}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
         {MetricChart("Conversion Rate","cv","cvp",200,function(v){return v+"%";})}
-        {MetricChart("Added to Cart Rate","acr","acrp",200,function(v){return v+"%";})}
-        {MetricChart("Checkout Conv Rate","ccr","ccrp",200,function(v){return v+"%";})}
-        {MetricChart("Bounce Rate","br","brp",200,function(v){return v+"%";})}
-        {MetricChart("Pageviews / Session","pvs","pvsp",200)}
-        {MetricChart("Avg Session Duration","asd","asdp",200,function(v){return v>=60?Math.floor(v/60)+"m":v+"s";})}
+        {MetricChart("Add to Cart Rate","acr","acrp",200,function(v){return v+"%";})}
+        {MetricChart("Reached Checkout Rate","ccr","ccrp",200,function(v){return v+"%";})}
+        {MetricChart("Cart \u2192 Checkout Rate","c2c","c2cp",200,function(v){return v+"%";})}
       </div>
+      {/* Funnel numbers stacked bar */}
+      <CB title="Funnel Stages" h={250}><BarChart data={cd}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return v>=1000?(v/1000).toFixed(0)+"k":v;}}/><Tooltip content={TT}/><Bar dataKey="ck" stackId="f" fill={CL.gn} name="Completed"/><Bar dataKey="rc" stackId="f" fill="#3B82F6" name="Reached Checkout"/><Bar dataKey="ca" stackId="f" fill={CL.am} name="Cart Adds"/><Bar dataKey="se" fill={CL.dm+"60"} name="Sessions"/></BarChart></CB>
     </div>}
     {/* Referrer Table */}
     {(d.rf||[]).length>0&&<div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,marginTop:12,overflowX:"auto"}}><div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Traffic Sources (Referrers)</div><Leg/><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th style={{...thS,textAlign:"left"}}>Source</th><th style={thS}>Sessions</th><th style={{...thS,color:ac}}>Conv%</th></tr></thead><tbody>{(d.rf||[]).map(function(r,i){return<tr key={i}><td style={{padding:"5px 6px",textAlign:"left",fontSize:10,fontWeight:600,color:CL.tx,borderBottom:"1px solid "+CL.bd+"20"}}>{r.n}</td><PlainTd>{r.s.toLocaleString()}</PlainTd><HC v={r.r>0?r.r+"%":"0%"} val={r.r} lo={0} hi={16}/></tr>;})}</tbody></table></div>}
@@ -458,9 +457,8 @@ function AllTraffic(p){
       cpCv:DS.cp.cv[i]||0, nbCv:DS.nb.cv[i]||0, n4Cv:DS.n4.cv[i]||0,
       cpAcr:DS.cp.acr?DS.cp.acr[i]||0:0, nbAcr:DS.nb.acr?DS.nb.acr[i]||0:0, n4Acr:DS.n4.acr?DS.n4.acr[i]||0:0,
       cpCcr:DS.cp.ccr?DS.cp.ccr[i]||0:0, nbCcr:DS.nb.ccr?DS.nb.ccr[i]||0:0, n4Ccr:DS.n4.ccr?DS.n4.ccr[i]||0:0,
-      cpBr:DS.cp.br?DS.cp.br[i]||0:0, nbBr:DS.nb.br?DS.nb.br[i]||0:0, n4Br:DS.n4.br?DS.n4.br[i]||0:0,
-      cpPvs:DS.cp.pvs?DS.cp.pvs[i]||0:0, nbPvs:DS.nb.pvs?DS.nb.pvs[i]||0:0, n4Pvs:DS.n4.pvs?DS.n4.pvs[i]||0:0,
-      cpAsd:DS.cp.asd?DS.cp.asd[i]||0:0, nbAsd:DS.nb.asd?DS.nb.asd[i]||0:0, n4Asd:DS.n4.asd?DS.n4.asd[i]||0:0
+      cpC2c:DS.cp.c2c?DS.cp.c2c[i]||0:0, nbC2c:DS.nb.c2c?DS.nb.c2c[i]||0:0, n4C2c:DS.n4.c2c?DS.n4.c2c[i]||0:0,
+      cpCa:DS.cp.ca[i]||0, nbCa:DS.nb.ca[i]||0, n4Ca:DS.n4.ca[i]||0
     };
   });
 
@@ -472,50 +470,55 @@ function AllTraffic(p){
     return<CB title={title} h={h||250}><BarChart data={cd}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={fmt||function(v){return v;}}/><Tooltip content={TT}/><Bar dataKey={cpK} stackId="s" fill={CL.cp} name="ColorProof"/><Bar dataKey={nbK} stackId="s" fill={CL.nb} name="NeumaBeauty"/><Bar dataKey={n4K} stackId="s" fill={CL.n4} radius={[4,4,0,0]} name="Number 4"/></BarChart></CB>;
   }
 
+  // Ranges for heatmap
+  var allSe=[].concat(DS.cp.se||[],DS.nb.se||[],DS.n4.se||[]).filter(function(x){return x>0;});
+  var seR={lo:allSe.length?Math.min.apply(null,allSe):0,hi:allSe.length?Math.max.apply(null,allSe):1};
+  var allAcr=[].concat(DS.cp.acr||[],DS.nb.acr||[],DS.n4.acr||[]).filter(function(x){return x>0;});
+  var acrR={lo:allAcr.length?Math.min.apply(null,allAcr):0,hi:allAcr.length?Math.max.apply(null,allAcr):1};
+
   return<div>
     <div style={{marginBottom:12,marginTop:18}}><h2 style={{fontSize:15,fontWeight:700,color:CL.tx,margin:0}}>Traffic & Session Metrics — All Stores</h2></div>
 
     {/* Sessions Stacked */}
     {StackedBar("Sessions — Stacked","cpSe","nbSe","n4Se",280,function(v){return v>=1000?(v/1000).toFixed(0)+"k":v;})}
 
+    {/* Cart Adds Stacked */}
+    {StackedBar("Cart Additions — Stacked","cpCa","nbCa","n4Ca",250,function(v){return v>=1000?(v/1000).toFixed(0)+"k":v;})}
+
     {/* Metric comparison charts in 2-column grid */}
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
       {MultiChart("Conversion Rate","cpCv","nbCv","n4Cv",220,function(v){return v+"%";})}
-      {MultiChart("Added to Cart Rate","cpAcr","nbAcr","n4Acr",220,function(v){return v+"%";})}
-      {MultiChart("Checkout Conv Rate","cpCcr","nbCcr","n4Ccr",220,function(v){return v+"%";})}
-      {MultiChart("Bounce Rate","cpBr","nbBr","n4Br",220,function(v){return v+"%";})}
-      {MultiChart("Pageviews / Session","cpPvs","nbPvs","n4Pvs",220)}
-      {MultiChart("Avg Session Duration","cpAsd","nbAsd","n4Asd",220,function(v){return v>=60?Math.floor(v/60)+"m":v+"s";})}
+      {MultiChart("Add to Cart Rate","cpAcr","nbAcr","n4Acr",220,function(v){return v+"%";})}
+      {MultiChart("Reached Checkout Rate","cpCcr","nbCcr","n4Ccr",220,function(v){return v+"%";})}
+      {MultiChart("Cart \u2192 Checkout Rate","cpC2c","nbC2c","n4C2c",220,function(v){return v+"%";})}
     </div>
 
     {/* Cross-Store Heatmap */}
     <div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,marginTop:12,overflowX:"auto"}}>
-      <div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Sessions & Bounce Rate Heatmap</div>
+      <div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Sessions & Add to Cart Rate Heatmap</div>
       <Leg/>
       <table style={{width:"100%",borderCollapse:"collapse"}}>
         <thead><tr>
           <th style={{...thS,textAlign:"left"}}>Month</th>
           <th style={{...thS,color:CL.cp}}>CP Sess</th>
-          <th style={{...thS,color:CL.cp}}>CP Bnce</th>
+          <th style={{...thS,color:CL.cp}}>CP ATC%</th>
           <th style={{...thS,color:CL.nb}}>NB Sess</th>
-          <th style={{...thS,color:CL.nb}}>NB Bnce</th>
+          <th style={{...thS,color:CL.nb}}>NB ATC%</th>
           <th style={{...thS,color:CL.n4}}>N4 Sess</th>
-          <th style={{...thS,color:CL.n4}}>N4 Bnce</th>
+          <th style={{...thS,color:CL.n4}}>N4 ATC%</th>
           <th style={thS}>Tot Sess</th>
         </tr></thead>
         <tbody>{MO.map(function(m,i){
           var cpS=DS.cp.se[i]||0,nbS=DS.nb.se[i]||0,n4S=DS.n4.se[i]||0;
-          var cpB=DS.cp.br?DS.cp.br[i]||0:0,nbB=DS.nb.br?DS.nb.br[i]||0:0,n4B=DS.n4.br?DS.n4.br[i]||0:0;
-          var allSe=[].concat(DS.cp.se||[],DS.nb.se||[],DS.n4.se||[]).filter(function(x){return x>0;});
-          var seR={lo:allSe.length?Math.min.apply(null,allSe):0,hi:allSe.length?Math.max.apply(null,allSe):1};
+          var cpA=DS.cp.acr?DS.cp.acr[i]||0:0,nbA=DS.nb.acr?DS.nb.acr[i]||0:0,n4A=DS.n4.acr?DS.n4.acr[i]||0:0;
           return<tr key={i}>
             <MonC m={m} i={i} r1s={p.r1s} r1e={p.r1e} r2s={p.r2s} r2e={p.r2e}/>
             <HC v={cpS.toLocaleString()} val={cpS} lo={seR.lo} hi={seR.hi}/>
-            <HC v={cpB.toFixed(1)+"%"} val={cpB} lo={0} hi={100} inv={true}/>
+            <HC v={cpA.toFixed(1)+"%"} val={cpA} lo={acrR.lo} hi={acrR.hi}/>
             <HC v={nbS.toLocaleString()} val={nbS} lo={seR.lo} hi={seR.hi}/>
-            <HC v={nbB.toFixed(1)+"%"} val={nbB} lo={0} hi={100} inv={true}/>
+            <HC v={nbA.toFixed(1)+"%"} val={nbA} lo={acrR.lo} hi={acrR.hi}/>
             <HC v={n4S.toLocaleString()} val={n4S} lo={seR.lo} hi={seR.hi}/>
-            <HC v={n4B.toFixed(1)+"%"} val={n4B} lo={0} hi={100} inv={true}/>
+            <HC v={n4A.toFixed(1)+"%"} val={n4A} lo={acrR.lo} hi={acrR.hi}/>
             <HC v={(cpS+nbS+n4S).toLocaleString()} val={cpS+nbS+n4S} lo={seR.lo*3} hi={seR.hi*3} bold={true}/>
           </tr>;
         })}</tbody>
