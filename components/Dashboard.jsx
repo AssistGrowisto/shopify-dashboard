@@ -299,6 +299,102 @@ function AllConversion(p){
   </div>;
 }
 
+// ═══ ALL STORES AOV & ORDERS (multi-store view) ═══
+function AllAOV(p){
+  var DS=p.DS,MO=p.months,r1s=p.r1s,r1e=p.r1e,r2s=p.r2s,r2e=p.r2e;
+
+  // Build chart data with per-store AOV, orders, and combined AOV
+  var cd=MO.map(function(m,i){
+    var cpS=DS.cp.s[i]||0,nbS=DS.nb.s[i]||0,n4S=DS.n4.s[i]||0;
+    var cpO=DS.cp.or[i]||0,nbO=DS.nb.or[i]||0,n4O=DS.n4.or[i]||0;
+    var totO=cpO+nbO+n4O;
+    var totS=cpS+nbS+n4S;
+    return{
+      m:m,
+      cpA:DS.cp.av[i]||0, nbA:DS.nb.av[i]||0, n4A:DS.n4.av[i]||0,
+      comb:totO>0?totS/totO:0,
+      cpO:cpO, nbO:nbO, n4O:n4O
+    };
+  });
+
+  // Ranges for heatmap
+  var allAOVs=[].concat(DS.cp.av||[],DS.nb.av||[],DS.n4.av||[]).filter(function(x){return x>0;});
+  var allOrds=[].concat(DS.cp.or||[],DS.nb.or||[],DS.n4.or||[]).filter(function(x){return x>0;});
+  var aovR={lo:allAOVs.length?Math.min.apply(null,allAOVs):0,hi:allAOVs.length?Math.max.apply(null,allAOVs):1};
+  var ordR={lo:allOrds.length?Math.min.apply(null,allOrds):0,hi:allOrds.length?Math.max.apply(null,allOrds):1};
+  // Total orders range
+  var totOrds=MO.map(function(_,i){return(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);}).filter(function(x){return x>0;});
+  var totOrdR={lo:totOrds.length?Math.min.apply(null,totOrds):0,hi:totOrds.length?Math.max.apply(null,totOrds):1};
+
+  return<div>
+    <div style={{marginBottom:12,marginTop:18}}><h2 style={{fontSize:15,fontWeight:700,color:CL.tx,margin:0}}>AOV & Orders</h2><p style={{fontSize:11,color:CL.mt,margin:"2px 0 0"}}>All stores comparison</p></div>
+
+    {/* Multi-store AOV Trend Line Chart */}
+    <CB title="AOV Trend" h={280}>
+      <ComposedChart data={cd}>
+        <CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/>
+        <XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/>
+        <YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return"$"+v;}}/>
+        <Tooltip content={TT}/>
+        <Line type="monotone" dataKey="cpA" stroke={CL.cp} strokeWidth={2.5} dot={{r:3,fill:CL.cp}} name="ColorProof"/>
+        <Line type="monotone" dataKey="nbA" stroke={CL.nb} strokeWidth={2.5} dot={{r:3,fill:CL.nb}} name="NeumaBeauty"/>
+        <Line type="monotone" dataKey="n4A" stroke={CL.n4} strokeWidth={2.5} dot={{r:3,fill:CL.n4}} name="Number 4"/>
+        <Line type="monotone" dataKey="comb" stroke={CL.al} strokeWidth={2} strokeDasharray="5 5" dot={{r:2,fill:CL.al}} name="Combined"/>
+      </ComposedChart>
+    </CB>
+
+    {/* Stacked Orders Bar Chart */}
+    <CB title="Orders — Stacked" h={280}>
+      <BarChart data={cd}>
+        <CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/>
+        <XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/>
+        <YAxis tick={{fontSize:9,fill:CL.dm}}/>
+        <Tooltip content={TT}/>
+        <Bar dataKey="cpO" stackId="orders" fill={CL.cp} name="ColorProof"/>
+        <Bar dataKey="nbO" stackId="orders" fill={CL.nb} name="NeumaBeauty"/>
+        <Bar dataKey="n4O" stackId="orders" fill={CL.n4} radius={[4,4,0,0]} name="Number 4"/>
+      </BarChart>
+    </CB>
+
+    {/* Cross-Store Heatmap Table */}
+    <div style={{background:CL.cd,border:"1px solid "+CL.bd,borderRadius:11,padding:14,marginBottom:12,overflowX:"auto"}}>
+      <div style={{fontSize:12,fontWeight:600,color:CL.tx,marginBottom:4}}>Cross-Store Heatmap</div>
+      <Leg/>
+      <table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead>
+          <tr>
+            <th style={{...thS,textAlign:"left"}}>Month</th>
+            <th style={{...thS,color:CL.cp}}>CP AOV</th>
+            <th style={{...thS,color:CL.cp}}>CP Ord</th>
+            <th style={{...thS,color:CL.nb}}>NB AOV</th>
+            <th style={{...thS,color:CL.nb}}>NB Ord</th>
+            <th style={{...thS,color:CL.n4}}>N4 AOV</th>
+            <th style={{...thS,color:CL.n4}}>N4 Ord</th>
+            <th style={thS}>Tot Ord</th>
+          </tr>
+        </thead>
+        <tbody>
+          {MO.map(function(m,i){
+            var cpAv=DS.cp.av[i]||0,nbAv=DS.nb.av[i]||0,n4Av=DS.n4.av[i]||0;
+            var cpOr=DS.cp.or[i]||0,nbOr=DS.nb.or[i]||0,n4Or=DS.n4.or[i]||0;
+            var totOr=cpOr+nbOr+n4Or;
+            return<tr key={i}>
+              <MonC m={m} i={i} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>
+              <HC v={"$"+cpAv.toFixed(2)} val={cpAv} lo={aovR.lo} hi={aovR.hi}/>
+              <HC v={cpOr.toLocaleString()} val={cpOr} lo={ordR.lo} hi={ordR.hi}/>
+              <HC v={"$"+nbAv.toFixed(2)} val={nbAv} lo={aovR.lo} hi={aovR.hi}/>
+              <HC v={nbOr.toLocaleString()} val={nbOr} lo={ordR.lo} hi={ordR.hi}/>
+              <HC v={"$"+n4Av.toFixed(2)} val={n4Av} lo={aovR.lo} hi={aovR.hi}/>
+              <HC v={n4Or.toLocaleString()} val={n4Or} lo={ordR.lo} hi={ordR.hi}/>
+              <HC v={totOr.toLocaleString()} val={totOr} lo={totOrdR.lo} hi={totOrdR.hi} bold={true}/>
+            </tr>;
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>;
+}
+
 // ═══ STORE AOV & ORDERS ═══
 function StoreAOV(p){
   var d=p.store,MO=p.months,avR=rng(d.av),orR=rng(d.or);
@@ -379,7 +475,7 @@ export default function Dashboard({ data }) {
       if(tab==="overview")return<AllOverview DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="sales")return<StoreSales store={allS} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="conversion")return<AllConversion DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
-      if(tab==="aov")return<StoreAOV store={allAOV} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
+      if(tab==="aov")return<AllAOV DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="funnel")return<AllFunnel DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="traffic")return<StoreTraffic store={{rf:[]}} ac={CL.al}/>;
       if(tab==="campaigns")return<StoreCampaign store={{ut:[]}} ac={CL.al}/>;
