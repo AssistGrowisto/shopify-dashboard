@@ -40,6 +40,9 @@ export async function GET() {
       cp: process.env.DRIVE_FOLDER_COLORPROOF,
       nb: process.env.DRIVE_FOLDER_NEUMABEAUTY,
       n4: process.env.DRIVE_FOLDER_NUMBER4,
+      cpp: process.env.DRIVE_FOLDER_COLORPROOF_PRO,
+      nbp: process.env.DRIVE_FOLDER_NEUMA_PRO,
+      n4p: process.env.DRIVE_FOLDER_NUMBER4_PRO,
     };
 
     const missing = Object.entries(folderIds)
@@ -50,7 +53,7 @@ export async function GET() {
       return Response.json(
         {
           error: "Missing folder IDs for: " + missing.join(", "),
-          hint: "Set DRIVE_FOLDER_COLORPROOF, DRIVE_FOLDER_NEUMABEAUTY, DRIVE_FOLDER_NUMBER4",
+          hint: "Set DRIVE_FOLDER_COLORPROOF, DRIVE_FOLDER_NEUMABEAUTY, DRIVE_FOLDER_NUMBER4, DRIVE_FOLDER_COLORPROOF_PRO, DRIVE_FOLDER_NEUMA_PRO, DRIVE_FOLDER_NUMBER4_PRO",
         },
         { status: 500 }
       );
@@ -64,7 +67,7 @@ export async function GET() {
 
     // Count data points for verification
     const stats = {};
-    ["cp", "nb", "n4"].forEach((key) => {
+    ["cp", "nb", "n4", "cpp", "nbp", "n4p"].forEach((key) => {
       if (dashboardData[key]) {
         stats[key] = {
           months: (dashboardData[key].s || []).length,

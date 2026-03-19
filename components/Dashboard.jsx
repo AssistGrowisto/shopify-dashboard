@@ -6,7 +6,7 @@ import {
   ReferenceLine, ComposedChart, Line, BarChart, Bar, Area, Cell,
 } from "recharts";
 
-var CL = { bg:"#0B0F1A", cd:"#131825", bd:"#1E2A42", gn:"#22C55E", rd:"#EF4444", am:"#F59E0B", tx:"#E2E8F0", mt:"#94A3B8", dm:"#64748B", gr:"#1E293B", cp:"#818CF8", nb:"#34D399", n4:"#F9A8D4", al:"#C4B5FD" };
+var CL = { bg:"#0B0F1A", cd:"#131825", bd:"#1E2A42", gn:"#22C55E", rd:"#EF4444", am:"#F59E0B", tx:"#E2E8F0", mt:"#94A3B8", dm:"#64748B", gr:"#1E293B", cp:"#818CF8", nb:"#34D399", n4:"#F9A8D4", al:"#C4B5FD", cpp:"#C084FC", nbp:"#2DD4BF", n4p:"#FB7185" };
 
 // ═══ HELPERS ═══
 function f$(v){return "$"+Math.round(v).toLocaleString();}
@@ -109,7 +109,10 @@ function AllFunnel(p){
   var stores=[
     {k:"cp",n:"ColorProof",c:CL.cp,d:DS.cp},
     {k:"nb",n:"NeumaBeauty",c:CL.nb,d:DS.nb},
-    {k:"n4",n:"Number 4",c:CL.n4,d:DS.n4}
+    {k:"n4",n:"Number 4",c:CL.n4,d:DS.n4},
+    {k:"cpp",n:"CP Pro",c:CL.cpp,d:DS.cpp},
+    {k:"nbp",n:"Neuma Pro",c:CL.nbp,d:DS.nbp},
+    {k:"n4p",n:"N4 Pro",c:CL.n4p,d:DS.n4p}
   ];
 
   // Combined funnel data
@@ -219,13 +222,15 @@ function AllConversion(p){
     return{
       m:m,
       cpC:DS.cp.cv[i]||0, nbC:DS.nb.cv[i]||0, n4C:DS.n4.cv[i]||0,
-      cpSe:DS.cp.se[i]||0, nbSe:DS.nb.se[i]||0, n4Se:DS.n4.se[i]||0
+      cppC:DS.cpp.cv[i]||0, nbpC:DS.nbp.cv[i]||0, n4pC:DS.n4p.cv[i]||0,
+      cpSe:DS.cp.se[i]||0, nbSe:DS.nb.se[i]||0, n4Se:DS.n4.se[i]||0,
+      cppSe:DS.cpp.se[i]||0, nbpSe:DS.nbp.se[i]||0, n4pSe:DS.n4p.se[i]||0
     };
   });
 
   // Ranges for heatmap coloring
-  var allRates=[].concat(DS.cp.cv||[],DS.nb.cv||[],DS.n4.cv||[]).filter(function(x){return x>0;});
-  var allSess=[].concat(DS.cp.se||[],DS.nb.se||[],DS.n4.se||[]).filter(function(x){return x>0;});
+  var allRates=[].concat(DS.cp.cv||[],DS.nb.cv||[],DS.n4.cv||[],DS.cpp.cv||[],DS.nbp.cv||[],DS.n4p.cv||[]).filter(function(x){return x>0;});
+  var allSess=[].concat(DS.cp.se||[],DS.nb.se||[],DS.n4.se||[],DS.cpp.se||[],DS.nbp.se||[],DS.n4p.se||[]).filter(function(x){return x>0;});
   var rateR={lo:allRates.length?Math.min.apply(null,allRates):0,hi:allRates.length?Math.max.apply(null,allRates):1};
   var sessR={lo:allSess.length?Math.min.apply(null,allSess):0,hi:allSess.length?Math.max.apply(null,allSess):1};
 
@@ -242,6 +247,9 @@ function AllConversion(p){
         <Line type="monotone" dataKey="cpC" stroke={CL.cp} strokeWidth={2.5} dot={{r:3,fill:CL.cp}} name="ColorProof"/>
         <Line type="monotone" dataKey="nbC" stroke={CL.nb} strokeWidth={2.5} dot={{r:3,fill:CL.nb}} name="NeumaBeauty"/>
         <Line type="monotone" dataKey="n4C" stroke={CL.n4} strokeWidth={2.5} dot={{r:3,fill:CL.n4}} name="Number 4"/>
+        <Line type="monotone" dataKey="cppC" stroke={CL.cpp} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.cpp}} name="CP Pro"/>
+        <Line type="monotone" dataKey="nbpC" stroke={CL.nbp} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.nbp}} name="Neuma Pro"/>
+        <Line type="monotone" dataKey="n4pC" stroke={CL.n4p} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.n4p}} name="N4 Pro"/>
       </ComposedChart>
     </CB>
 
@@ -254,7 +262,10 @@ function AllConversion(p){
         <Tooltip content={TT}/>
         <Bar dataKey="cpSe" stackId="sessions" fill={CL.cp} name="ColorProof"/>
         <Bar dataKey="nbSe" stackId="sessions" fill={CL.nb} name="NeumaBeauty"/>
-        <Bar dataKey="n4Se" stackId="sessions" fill={CL.n4} radius={[4,4,0,0]} name="Number 4"/>
+        <Bar dataKey="n4Se" stackId="sessions" fill={CL.n4} name="Number 4"/>
+        <Bar dataKey="cppSe" stackId="sessions" fill={CL.cpp} name="CP Pro"/>
+        <Bar dataKey="nbpSe" stackId="sessions" fill={CL.nbp} name="Neuma Pro"/>
+        <Bar dataKey="n4pSe" stackId="sessions" fill={CL.n4p} radius={[4,4,0,0]} name="N4 Pro"/>
       </BarChart>
     </CB>
 
@@ -272,15 +283,23 @@ function AllConversion(p){
             <th style={{...thS,color:CL.nb}}>NB Sess</th>
             <th style={{...thS,color:CL.n4}}>N4 Rate</th>
             <th style={{...thS,color:CL.n4}}>N4 Sess</th>
+            <th style={{...thS,color:CL.cpp}}>CPP Rate</th>
+            <th style={{...thS,color:CL.cpp}}>CPP Sess</th>
+            <th style={{...thS,color:CL.nbp}}>NBP Rate</th>
+            <th style={{...thS,color:CL.nbp}}>NBP Sess</th>
+            <th style={{...thS,color:CL.n4p}}>N4P Rate</th>
+            <th style={{...thS,color:CL.n4p}}>N4P Sess</th>
             <th style={thS}>Combined</th>
           </tr>
         </thead>
         <tbody>
           {MO.map(function(m,i){
             var cpR2=DS.cp.cv[i]||0,nbR2=DS.nb.cv[i]||0,n4R2=DS.n4.cv[i]||0;
+            var cppR2=DS.cpp.cv[i]||0,nbpR2=DS.nbp.cv[i]||0,n4pR2=DS.n4p.cv[i]||0;
             var cpS2=DS.cp.se[i]||0,nbS2=DS.nb.se[i]||0,n4S2=DS.n4.se[i]||0;
-            var totSe=cpS2+nbS2+n4S2;
-            var totCk=(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0);
+            var cppS2=DS.cpp.se[i]||0,nbpS2=DS.nbp.se[i]||0,n4pS2=DS.n4p.se[i]||0;
+            var totSe=cpS2+nbS2+n4S2+cppS2+nbpS2+n4pS2;
+            var totCk=(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0)+(DS.cpp.ck[i]||0)+(DS.nbp.ck[i]||0)+(DS.n4p.ck[i]||0);
             var combined=totSe>0?(totCk/totSe*100):0;
             return<tr key={i}>
               <MonC m={m} i={i} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>
@@ -290,6 +309,12 @@ function AllConversion(p){
               <HC v={nbS2.toLocaleString()} val={nbS2} lo={sessR.lo} hi={sessR.hi}/>
               <HC v={n4R2.toFixed(2)+"%"} val={n4R2} lo={rateR.lo} hi={rateR.hi}/>
               <HC v={n4S2.toLocaleString()} val={n4S2} lo={sessR.lo} hi={sessR.hi}/>
+              <HC v={cppR2.toFixed(2)+"%"} val={cppR2} lo={rateR.lo} hi={rateR.hi}/>
+              <HC v={cppS2.toLocaleString()} val={cppS2} lo={sessR.lo} hi={sessR.hi}/>
+              <HC v={nbpR2.toFixed(2)+"%"} val={nbpR2} lo={rateR.lo} hi={rateR.hi}/>
+              <HC v={nbpS2.toLocaleString()} val={nbpS2} lo={sessR.lo} hi={sessR.hi}/>
+              <HC v={n4pR2.toFixed(2)+"%"} val={n4pR2} lo={rateR.lo} hi={rateR.hi}/>
+              <HC v={n4pS2.toLocaleString()} val={n4pS2} lo={sessR.lo} hi={sessR.hi}/>
               <HC v={combined.toFixed(2)+"%"} val={combined} lo={rateR.lo} hi={rateR.hi} bold={true}/>
             </tr>;
           })}
@@ -306,24 +331,27 @@ function AllAOV(p){
   // Build chart data with per-store AOV, orders, and combined AOV
   var cd=MO.map(function(m,i){
     var cpS=DS.cp.s[i]||0,nbS=DS.nb.s[i]||0,n4S=DS.n4.s[i]||0;
+    var cppS=DS.cpp.s[i]||0,nbpS=DS.nbp.s[i]||0,n4pS=DS.n4p.s[i]||0;
     var cpO=DS.cp.or[i]||0,nbO=DS.nb.or[i]||0,n4O=DS.n4.or[i]||0;
-    var totO=cpO+nbO+n4O;
-    var totS=cpS+nbS+n4S;
+    var cppO=DS.cpp.or[i]||0,nbpO=DS.nbp.or[i]||0,n4pO=DS.n4p.or[i]||0;
+    var totO=cpO+nbO+n4O+cppO+nbpO+n4pO;
+    var totS=cpS+nbS+n4S+cppS+nbpS+n4pS;
     return{
       m:m,
       cpA:DS.cp.av[i]||0, nbA:DS.nb.av[i]||0, n4A:DS.n4.av[i]||0,
+      cppA:DS.cpp.av[i]||0, nbpA:DS.nbp.av[i]||0, n4pA:DS.n4p.av[i]||0,
       comb:totO>0?totS/totO:0,
-      cpO:cpO, nbO:nbO, n4O:n4O
+      cpO:cpO, nbO:nbO, n4O:n4O, cppO:cppO, nbpO:nbpO, n4pO:n4pO
     };
   });
 
   // Ranges for heatmap
-  var allAOVs=[].concat(DS.cp.av||[],DS.nb.av||[],DS.n4.av||[]).filter(function(x){return x>0;});
-  var allOrds=[].concat(DS.cp.or||[],DS.nb.or||[],DS.n4.or||[]).filter(function(x){return x>0;});
+  var allAOVs=[].concat(DS.cp.av||[],DS.nb.av||[],DS.n4.av||[],DS.cpp.av||[],DS.nbp.av||[],DS.n4p.av||[]).filter(function(x){return x>0;});
+  var allOrds=[].concat(DS.cp.or||[],DS.nb.or||[],DS.n4.or||[],DS.cpp.or||[],DS.nbp.or||[],DS.n4p.or||[]).filter(function(x){return x>0;});
   var aovR={lo:allAOVs.length?Math.min.apply(null,allAOVs):0,hi:allAOVs.length?Math.max.apply(null,allAOVs):1};
   var ordR={lo:allOrds.length?Math.min.apply(null,allOrds):0,hi:allOrds.length?Math.max.apply(null,allOrds):1};
   // Total orders range
-  var totOrds=MO.map(function(_,i){return(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);}).filter(function(x){return x>0;});
+  var totOrds=MO.map(function(_,i){return(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0)+(DS.cpp.or[i]||0)+(DS.nbp.or[i]||0)+(DS.n4p.or[i]||0);}).filter(function(x){return x>0;});
   var totOrdR={lo:totOrds.length?Math.min.apply(null,totOrds):0,hi:totOrds.length?Math.max.apply(null,totOrds):1};
 
   return<div>
@@ -339,6 +367,9 @@ function AllAOV(p){
         <Line type="monotone" dataKey="cpA" stroke={CL.cp} strokeWidth={2.5} dot={{r:3,fill:CL.cp}} name="ColorProof"/>
         <Line type="monotone" dataKey="nbA" stroke={CL.nb} strokeWidth={2.5} dot={{r:3,fill:CL.nb}} name="NeumaBeauty"/>
         <Line type="monotone" dataKey="n4A" stroke={CL.n4} strokeWidth={2.5} dot={{r:3,fill:CL.n4}} name="Number 4"/>
+        <Line type="monotone" dataKey="cppA" stroke={CL.cpp} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.cpp}} name="CP Pro"/>
+        <Line type="monotone" dataKey="nbpA" stroke={CL.nbp} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.nbp}} name="Neuma Pro"/>
+        <Line type="monotone" dataKey="n4pA" stroke={CL.n4p} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.n4p}} name="N4 Pro"/>
         <Line type="monotone" dataKey="comb" stroke={CL.al} strokeWidth={2} strokeDasharray="5 5" dot={{r:2,fill:CL.al}} name="Combined"/>
       </ComposedChart>
     </CB>
@@ -352,7 +383,10 @@ function AllAOV(p){
         <Tooltip content={TT}/>
         <Bar dataKey="cpO" stackId="orders" fill={CL.cp} name="ColorProof"/>
         <Bar dataKey="nbO" stackId="orders" fill={CL.nb} name="NeumaBeauty"/>
-        <Bar dataKey="n4O" stackId="orders" fill={CL.n4} radius={[4,4,0,0]} name="Number 4"/>
+        <Bar dataKey="n4O" stackId="orders" fill={CL.n4} name="Number 4"/>
+        <Bar dataKey="cppO" stackId="orders" fill={CL.cpp} name="CP Pro"/>
+        <Bar dataKey="nbpO" stackId="orders" fill={CL.nbp} name="Neuma Pro"/>
+        <Bar dataKey="n4pO" stackId="orders" fill={CL.n4p} radius={[4,4,0,0]} name="N4 Pro"/>
       </BarChart>
     </CB>
 
@@ -370,14 +404,22 @@ function AllAOV(p){
             <th style={{...thS,color:CL.nb}}>NB Ord</th>
             <th style={{...thS,color:CL.n4}}>N4 AOV</th>
             <th style={{...thS,color:CL.n4}}>N4 Ord</th>
+            <th style={{...thS,color:CL.cpp}}>CPP AOV</th>
+            <th style={{...thS,color:CL.cpp}}>CPP Ord</th>
+            <th style={{...thS,color:CL.nbp}}>NBP AOV</th>
+            <th style={{...thS,color:CL.nbp}}>NBP Ord</th>
+            <th style={{...thS,color:CL.n4p}}>N4P AOV</th>
+            <th style={{...thS,color:CL.n4p}}>N4P Ord</th>
             <th style={thS}>Tot Ord</th>
           </tr>
         </thead>
         <tbody>
           {MO.map(function(m,i){
             var cpAv=DS.cp.av[i]||0,nbAv=DS.nb.av[i]||0,n4Av=DS.n4.av[i]||0;
+            var cppAv=DS.cpp.av[i]||0,nbpAv=DS.nbp.av[i]||0,n4pAv=DS.n4p.av[i]||0;
             var cpOr=DS.cp.or[i]||0,nbOr=DS.nb.or[i]||0,n4Or=DS.n4.or[i]||0;
-            var totOr=cpOr+nbOr+n4Or;
+            var cppOr=DS.cpp.or[i]||0,nbpOr=DS.nbp.or[i]||0,n4pOr=DS.n4p.or[i]||0;
+            var totOr=cpOr+nbOr+n4Or+cppOr+nbpOr+n4pOr;
             return<tr key={i}>
               <MonC m={m} i={i} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>
               <HC v={"$"+cpAv.toFixed(2)} val={cpAv} lo={aovR.lo} hi={aovR.hi}/>
@@ -386,6 +428,12 @@ function AllAOV(p){
               <HC v={nbOr.toLocaleString()} val={nbOr} lo={ordR.lo} hi={ordR.hi}/>
               <HC v={"$"+n4Av.toFixed(2)} val={n4Av} lo={aovR.lo} hi={aovR.hi}/>
               <HC v={n4Or.toLocaleString()} val={n4Or} lo={ordR.lo} hi={ordR.hi}/>
+              <HC v={"$"+cppAv.toFixed(2)} val={cppAv} lo={aovR.lo} hi={aovR.hi}/>
+              <HC v={cppOr.toLocaleString()} val={cppOr} lo={ordR.lo} hi={ordR.hi}/>
+              <HC v={"$"+nbpAv.toFixed(2)} val={nbpAv} lo={aovR.lo} hi={aovR.hi}/>
+              <HC v={nbpOr.toLocaleString()} val={nbpOr} lo={ordR.lo} hi={ordR.hi}/>
+              <HC v={"$"+n4pAv.toFixed(2)} val={n4pAv} lo={aovR.lo} hi={aovR.hi}/>
+              <HC v={n4pOr.toLocaleString()} val={n4pOr} lo={ordR.lo} hi={ordR.hi}/>
               <HC v={totOr.toLocaleString()} val={totOr} lo={totOrdR.lo} hi={totOrdR.hi} bold={true}/>
             </tr>;
           })}
@@ -454,43 +502,49 @@ function AllTraffic(p){
     return{
       m:m,
       cpSe:DS.cp.se[i]||0, nbSe:DS.nb.se[i]||0, n4Se:DS.n4.se[i]||0,
+      cppSe:DS.cpp.se[i]||0, nbpSe:DS.nbp.se[i]||0, n4pSe:DS.n4p.se[i]||0,
       cpCv:DS.cp.cv[i]||0, nbCv:DS.nb.cv[i]||0, n4Cv:DS.n4.cv[i]||0,
+      cppCv:DS.cpp.cv[i]||0, nbpCv:DS.nbp.cv[i]||0, n4pCv:DS.n4p.cv[i]||0,
       cpAcr:DS.cp.acr?DS.cp.acr[i]||0:0, nbAcr:DS.nb.acr?DS.nb.acr[i]||0:0, n4Acr:DS.n4.acr?DS.n4.acr[i]||0:0,
+      cppAcr:DS.cpp.acr?DS.cpp.acr[i]||0:0, nbpAcr:DS.nbp.acr?DS.nbp.acr[i]||0:0, n4pAcr:DS.n4p.acr?DS.n4p.acr[i]||0:0,
       cpCcr:DS.cp.ccr?DS.cp.ccr[i]||0:0, nbCcr:DS.nb.ccr?DS.nb.ccr[i]||0:0, n4Ccr:DS.n4.ccr?DS.n4.ccr[i]||0:0,
+      cppCcr:DS.cpp.ccr?DS.cpp.ccr[i]||0:0, nbpCcr:DS.nbp.ccr?DS.nbp.ccr[i]||0:0, n4pCcr:DS.n4p.ccr?DS.n4p.ccr[i]||0:0,
       cpC2c:DS.cp.c2c?DS.cp.c2c[i]||0:0, nbC2c:DS.nb.c2c?DS.nb.c2c[i]||0:0, n4C2c:DS.n4.c2c?DS.n4.c2c[i]||0:0,
-      cpCa:DS.cp.ca[i]||0, nbCa:DS.nb.ca[i]||0, n4Ca:DS.n4.ca[i]||0
+      cppC2c:DS.cpp.c2c?DS.cpp.c2c[i]||0:0, nbpC2c:DS.nbp.c2c?DS.nbp.c2c[i]||0:0, n4pC2c:DS.n4p.c2c?DS.n4p.c2c[i]||0:0,
+      cpCa:DS.cp.ca[i]||0, nbCa:DS.nb.ca[i]||0, n4Ca:DS.n4.ca[i]||0,
+      cppCa:DS.cpp.ca[i]||0, nbpCa:DS.nbp.ca[i]||0, n4pCa:DS.n4p.ca[i]||0
     };
   });
 
-  function MultiChart(title,cpK,nbK,n4K,h,fmt){
-    return<CB title={title} h={h||250}><ComposedChart data={cd}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={fmt||function(v){return v;}}/><Tooltip content={TT}/><Line type="monotone" dataKey={cpK} stroke={CL.cp} strokeWidth={2.5} dot={{r:3,fill:CL.cp}} name="ColorProof"/><Line type="monotone" dataKey={nbK} stroke={CL.nb} strokeWidth={2.5} dot={{r:3,fill:CL.nb}} name="NeumaBeauty"/><Line type="monotone" dataKey={n4K} stroke={CL.n4} strokeWidth={2.5} dot={{r:3,fill:CL.n4}} name="Number 4"/></ComposedChart></CB>;
+  function MultiChart(title,cpK,nbK,n4K,cppK,nbpK,n4pK,h,fmt){
+    return<CB title={title} h={h||250}><ComposedChart data={cd}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={fmt||function(v){return v;}}/><Tooltip content={TT}/><Line type="monotone" dataKey={cpK} stroke={CL.cp} strokeWidth={2.5} dot={{r:3,fill:CL.cp}} name="ColorProof"/><Line type="monotone" dataKey={nbK} stroke={CL.nb} strokeWidth={2.5} dot={{r:3,fill:CL.nb}} name="NeumaBeauty"/><Line type="monotone" dataKey={n4K} stroke={CL.n4} strokeWidth={2.5} dot={{r:3,fill:CL.n4}} name="Number 4"/><Line type="monotone" dataKey={cppK} stroke={CL.cpp} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.cpp}} name="CP Pro"/><Line type="monotone" dataKey={nbpK} stroke={CL.nbp} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.nbp}} name="Neuma Pro"/><Line type="monotone" dataKey={n4pK} stroke={CL.n4p} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.n4p}} name="N4 Pro"/></ComposedChart></CB>;
   }
 
-  function StackedBar(title,cpK,nbK,n4K,h,fmt){
-    return<CB title={title} h={h||250}><BarChart data={cd}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={fmt||function(v){return v;}}/><Tooltip content={TT}/><Bar dataKey={cpK} stackId="s" fill={CL.cp} name="ColorProof"/><Bar dataKey={nbK} stackId="s" fill={CL.nb} name="NeumaBeauty"/><Bar dataKey={n4K} stackId="s" fill={CL.n4} radius={[4,4,0,0]} name="Number 4"/></BarChart></CB>;
+  function StackedBar(title,cpK,nbK,n4K,cppK,nbpK,n4pK,h,fmt){
+    return<CB title={title} h={h||250}><BarChart data={cd}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={fmt||function(v){return v;}}/><Tooltip content={TT}/><Bar dataKey={cpK} stackId="s" fill={CL.cp} name="ColorProof"/><Bar dataKey={nbK} stackId="s" fill={CL.nb} name="NeumaBeauty"/><Bar dataKey={n4K} stackId="s" fill={CL.n4} name="Number 4"/><Bar dataKey={cppK} stackId="s" fill={CL.cpp} name="CP Pro"/><Bar dataKey={nbpK} stackId="s" fill={CL.nbp} name="Neuma Pro"/><Bar dataKey={n4pK} stackId="s" fill={CL.n4p} radius={[4,4,0,0]} name="N4 Pro"/></BarChart></CB>;
   }
 
   // Ranges for heatmap
-  var allSe=[].concat(DS.cp.se||[],DS.nb.se||[],DS.n4.se||[]).filter(function(x){return x>0;});
+  var allSe=[].concat(DS.cp.se||[],DS.nb.se||[],DS.n4.se||[],DS.cpp.se||[],DS.nbp.se||[],DS.n4p.se||[]).filter(function(x){return x>0;});
   var seR={lo:allSe.length?Math.min.apply(null,allSe):0,hi:allSe.length?Math.max.apply(null,allSe):1};
-  var allAcr=[].concat(DS.cp.acr||[],DS.nb.acr||[],DS.n4.acr||[]).filter(function(x){return x>0;});
+  var allAcr=[].concat(DS.cp.acr||[],DS.nb.acr||[],DS.n4.acr||[],DS.cpp.acr||[],DS.nbp.acr||[],DS.n4p.acr||[]).filter(function(x){return x>0;});
   var acrR={lo:allAcr.length?Math.min.apply(null,allAcr):0,hi:allAcr.length?Math.max.apply(null,allAcr):1};
 
   return<div>
     <div style={{marginBottom:12,marginTop:18}}><h2 style={{fontSize:15,fontWeight:700,color:CL.tx,margin:0}}>Traffic & Session Metrics — All Stores</h2></div>
 
     {/* Sessions Stacked */}
-    {StackedBar("Sessions — Stacked","cpSe","nbSe","n4Se",280,function(v){return v>=1000?(v/1000).toFixed(0)+"k":v;})}
+    {StackedBar("Sessions — Stacked","cpSe","nbSe","n4Se","cppSe","nbpSe","n4pSe",280,function(v){return v>=1000?(v/1000).toFixed(0)+"k":v;})}
 
     {/* Cart Adds Stacked */}
-    {StackedBar("Cart Additions — Stacked","cpCa","nbCa","n4Ca",250,function(v){return v>=1000?(v/1000).toFixed(0)+"k":v;})}
+    {StackedBar("Cart Additions — Stacked","cpCa","nbCa","n4Ca","cppCa","nbpCa","n4pCa",250,function(v){return v>=1000?(v/1000).toFixed(0)+"k":v;})}
 
     {/* Metric comparison charts in 2-column grid */}
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-      {MultiChart("Conversion Rate","cpCv","nbCv","n4Cv",220,function(v){return v+"%";})}
-      {MultiChart("Add to Cart Rate","cpAcr","nbAcr","n4Acr",220,function(v){return v+"%";})}
-      {MultiChart("Reached Checkout Rate","cpCcr","nbCcr","n4Ccr",220,function(v){return v+"%";})}
-      {MultiChart("Cart \u2192 Checkout Rate","cpC2c","nbC2c","n4C2c",220,function(v){return v+"%";})}
+      {MultiChart("Conversion Rate","cpCv","nbCv","n4Cv","cppCv","nbpCv","n4pCv",220,function(v){return v+"%";})}
+      {MultiChart("Add to Cart Rate","cpAcr","nbAcr","n4Acr","cppAcr","nbpAcr","n4pAcr",220,function(v){return v+"%";})}
+      {MultiChart("Reached Checkout Rate","cpCcr","nbCcr","n4Ccr","cppCcr","nbpCcr","n4pCcr",220,function(v){return v+"%";})}
+      {MultiChart("Cart \u2192 Checkout Rate","cpC2c","nbC2c","n4C2c","cppC2c","nbpC2c","n4pC2c",220,function(v){return v+"%";})}
     </div>
 
     {/* Cross-Store Heatmap */}
@@ -506,11 +560,20 @@ function AllTraffic(p){
           <th style={{...thS,color:CL.nb}}>NB ATC%</th>
           <th style={{...thS,color:CL.n4}}>N4 Sess</th>
           <th style={{...thS,color:CL.n4}}>N4 ATC%</th>
+          <th style={{...thS,color:CL.cpp}}>CPP Sess</th>
+          <th style={{...thS,color:CL.cpp}}>CPP ATC%</th>
+          <th style={{...thS,color:CL.nbp}}>NBP Sess</th>
+          <th style={{...thS,color:CL.nbp}}>NBP ATC%</th>
+          <th style={{...thS,color:CL.n4p}}>N4P Sess</th>
+          <th style={{...thS,color:CL.n4p}}>N4P ATC%</th>
           <th style={thS}>Tot Sess</th>
         </tr></thead>
         <tbody>{MO.map(function(m,i){
           var cpS=DS.cp.se[i]||0,nbS=DS.nb.se[i]||0,n4S=DS.n4.se[i]||0;
+          var cppS=DS.cpp.se[i]||0,nbpS=DS.nbp.se[i]||0,n4pS=DS.n4p.se[i]||0;
           var cpA=DS.cp.acr?DS.cp.acr[i]||0:0,nbA=DS.nb.acr?DS.nb.acr[i]||0:0,n4A=DS.n4.acr?DS.n4.acr[i]||0:0;
+          var cppA=DS.cpp.acr?DS.cpp.acr[i]||0:0,nbpA=DS.nbp.acr?DS.nbp.acr[i]||0:0,n4pA=DS.n4p.acr?DS.n4p.acr[i]||0:0;
+          var totS=cpS+nbS+n4S+cppS+nbpS+n4pS;
           return<tr key={i}>
             <MonC m={m} i={i} r1s={p.r1s} r1e={p.r1e} r2s={p.r2s} r2e={p.r2e}/>
             <HC v={cpS.toLocaleString()} val={cpS} lo={seR.lo} hi={seR.hi}/>
@@ -519,7 +582,13 @@ function AllTraffic(p){
             <HC v={nbA.toFixed(1)+"%"} val={nbA} lo={acrR.lo} hi={acrR.hi}/>
             <HC v={n4S.toLocaleString()} val={n4S} lo={seR.lo} hi={seR.hi}/>
             <HC v={n4A.toFixed(1)+"%"} val={n4A} lo={acrR.lo} hi={acrR.hi}/>
-            <HC v={(cpS+nbS+n4S).toLocaleString()} val={cpS+nbS+n4S} lo={seR.lo*3} hi={seR.hi*3} bold={true}/>
+            <HC v={cppS.toLocaleString()} val={cppS} lo={seR.lo} hi={seR.hi}/>
+            <HC v={cppA.toFixed(1)+"%"} val={cppA} lo={acrR.lo} hi={acrR.hi}/>
+            <HC v={nbpS.toLocaleString()} val={nbpS} lo={seR.lo} hi={seR.hi}/>
+            <HC v={nbpA.toFixed(1)+"%"} val={nbpA} lo={acrR.lo} hi={acrR.hi}/>
+            <HC v={n4pS.toLocaleString()} val={n4pS} lo={seR.lo} hi={seR.hi}/>
+            <HC v={n4pA.toFixed(1)+"%"} val={n4pA} lo={acrR.lo} hi={acrR.hi}/>
+            <HC v={totS.toLocaleString()} val={totS} lo={seR.lo*6} hi={seR.hi*6} bold={true}/>
           </tr>;
         })}</tbody>
       </table>
@@ -599,7 +668,10 @@ function AllCampaign(p){
   var stores=[
     {k:"cp",n:"ColorProof",c:CL.cp,d:DS.cp},
     {k:"nb",n:"NeumaBeauty",c:CL.nb,d:DS.nb},
-    {k:"n4",n:"Number 4",c:CL.n4,d:DS.n4}
+    {k:"n4",n:"Number 4",c:CL.n4,d:DS.n4},
+    {k:"cpp",n:"CP Pro",c:CL.cpp,d:DS.cpp},
+    {k:"nbp",n:"Neuma Pro",c:CL.nbp,d:DS.nbp},
+    {k:"n4p",n:"N4 Pro",c:CL.n4p,d:DS.n4p}
   ];
 
   // Per-store totals
@@ -620,10 +692,7 @@ function AllCampaign(p){
   stores.forEach(function(st){
     (st.d.uc||[]).forEach(function(ch){
       var key=ch.ch;
-      if(!allChannels[key])allChannels[key]={ch:key,cpSe:0,cpSa:0,nbSe:0,nbSa:0,n4Se:0,n4Sa:0,totSe:0,totSa:0,totOr:0,cl:ch.cl};
-      if(st.k==="cp"){allChannels[key].cpSe+=ch.se;allChannels[key].cpSa+=ch.sa;}
-      if(st.k==="nb"){allChannels[key].nbSe+=ch.se;allChannels[key].nbSa+=ch.sa;}
-      if(st.k==="n4"){allChannels[key].n4Se+=ch.se;allChannels[key].n4Sa+=ch.sa;}
+      if(!allChannels[key])allChannels[key]={ch:key,totSe:0,totSa:0,totOr:0,cl:ch.cl};
       allChannels[key].totSe+=ch.se;allChannels[key].totSa+=ch.sa;allChannels[key].totOr+=ch.or;
     });
   });
@@ -697,15 +766,15 @@ function AllCampaign(p){
 // ═══ ALL STORES OVERVIEW ═══
 function AllOverview(p){
   var DS=p.DS,MO=p.months,r1s=p.r1s,r1e=p.r1e,r2s=p.r2s,r2e=p.r2e;
-  var CD=MO.map(function(m,i){return{m:m,cpS:(DS.cp.s[i]||0),nbS:(DS.nb.s[i]||0),n4S:(DS.n4.s[i]||0),cpC:(DS.cp.cv[i]||0),nbC:(DS.nb.cv[i]||0),n4C:(DS.n4.cv[i]||0)};});
-  var tB=avg(DS.cp.s,r1s,r1e+1)+avg(DS.nb.s,r1s,r1e+1)+avg(DS.n4.s,r1s,r1e+1);
-  var tA=avg(DS.cp.s,r2s,r2e+1)+avg(DS.nb.s,r2s,r2e+1)+avg(DS.n4.s,r2s,r2e+1);
+  var CD=MO.map(function(m,i){return{m:m,cpS:(DS.cp.s[i]||0),nbS:(DS.nb.s[i]||0),n4S:(DS.n4.s[i]||0),cppS:(DS.cpp.s[i]||0),nbpS:(DS.nbp.s[i]||0),n4pS:(DS.n4p.s[i]||0),cpC:(DS.cp.cv[i]||0),nbC:(DS.nb.cv[i]||0),n4C:(DS.n4.cv[i]||0)};});
+  var tB=avg(DS.cp.s,r1s,r1e+1)+avg(DS.nb.s,r1s,r1e+1)+avg(DS.n4.s,r1s,r1e+1)+avg(DS.cpp.s,r1s,r1e+1)+avg(DS.nbp.s,r1s,r1e+1)+avg(DS.n4p.s,r1s,r1e+1);
+  var tA=avg(DS.cp.s,r2s,r2e+1)+avg(DS.nb.s,r2s,r2e+1)+avg(DS.n4.s,r2s,r2e+1)+avg(DS.cpp.s,r2s,r2e+1)+avg(DS.nbp.s,r2s,r2e+1)+avg(DS.n4p.s,r2s,r2e+1);
   var metrics=[
-    {l:"Sales/mo",f:f$,d:[{b:avg(DS.cp.s,r1s,r1e+1),a:avg(DS.cp.s,r2s,r2e+1)},{b:avg(DS.nb.s,r1s,r1e+1),a:avg(DS.nb.s,r2s,r2e+1)},{b:avg(DS.n4.s,r1s,r1e+1),a:avg(DS.n4.s,r2s,r2e+1)}]},
-    {l:"Conv %",f:function(v){return v.toFixed(2)+"%";},d:[{b:avg(DS.cp.cv,r1s,r1e+1),a:avg(DS.cp.cv,r2s,r2e+1)},{b:avg(DS.nb.cv,r1s,r1e+1),a:avg(DS.nb.cv,r2s,r2e+1)},{b:avg(DS.n4.cv,r1s,r1e+1),a:avg(DS.n4.cv,r2s,r2e+1)}]},
-    {l:"AOV",f:function(v){return "$"+v.toFixed(2);},d:[{b:avg(DS.cp.av,r1s,r1e+1),a:avg(DS.cp.av,r2s,r2e+1)},{b:avg(DS.nb.av,r1s,r1e+1),a:avg(DS.nb.av,r2s,r2e+1)},{b:avg(DS.n4.av,r1s,r1e+1),a:avg(DS.n4.av,r2s,r2e+1)}]}
+    {l:"Sales/mo",f:f$,d:[{b:avg(DS.cp.s,r1s,r1e+1),a:avg(DS.cp.s,r2s,r2e+1)},{b:avg(DS.nb.s,r1s,r1e+1),a:avg(DS.nb.s,r2s,r2e+1)},{b:avg(DS.n4.s,r1s,r1e+1),a:avg(DS.n4.s,r2s,r2e+1)},{b:avg(DS.cpp.s,r1s,r1e+1),a:avg(DS.cpp.s,r2s,r2e+1)},{b:avg(DS.nbp.s,r1s,r1e+1),a:avg(DS.nbp.s,r2s,r2e+1)},{b:avg(DS.n4p.s,r1s,r1e+1),a:avg(DS.n4p.s,r2s,r2e+1)}]},
+    {l:"Conv %",f:function(v){return v.toFixed(2)+"%";},d:[{b:avg(DS.cp.cv,r1s,r1e+1),a:avg(DS.cp.cv,r2s,r2e+1)},{b:avg(DS.nb.cv,r1s,r1e+1),a:avg(DS.nb.cv,r2s,r2e+1)},{b:avg(DS.n4.cv,r1s,r1e+1),a:avg(DS.n4.cv,r2s,r2e+1)},{b:avg(DS.cpp.cv,r1s,r1e+1),a:avg(DS.cpp.cv,r2s,r2e+1)},{b:avg(DS.nbp.cv,r1s,r1e+1),a:avg(DS.nbp.cv,r2s,r2e+1)},{b:avg(DS.n4p.cv,r1s,r1e+1),a:avg(DS.n4p.cv,r2s,r2e+1)}]},
+    {l:"AOV",f:function(v){return "$"+v.toFixed(2);},d:[{b:avg(DS.cp.av,r1s,r1e+1),a:avg(DS.cp.av,r2s,r2e+1)},{b:avg(DS.nb.av,r1s,r1e+1),a:avg(DS.nb.av,r2s,r2e+1)},{b:avg(DS.n4.av,r1s,r1e+1),a:avg(DS.n4.av,r2s,r2e+1)},{b:avg(DS.cpp.av,r1s,r1e+1),a:avg(DS.cpp.av,r2s,r2e+1)},{b:avg(DS.nbp.av,r1s,r1e+1),a:avg(DS.nbp.av,r2s,r2e+1)},{b:avg(DS.n4p.av,r1s,r1e+1),a:avg(DS.n4p.av,r2s,r2e+1)}]}
   ];
-  var stores=[{n:"ColorProof",c:CL.cp},{n:"NeumaBeauty",c:CL.nb},{n:"Number 4",c:CL.n4}];
+  var stores=[{n:"ColorProof",c:CL.cp},{n:"NeumaBeauty",c:CL.nb},{n:"Number 4",c:CL.n4},{n:"CP Pro",c:CL.cpp},{n:"Neuma Pro",c:CL.nbp},{n:"N4 Pro",c:CL.n4p}];
   return<div>
     <div style={{marginBottom:12,marginTop:18}}><h2 style={{fontSize:15,fontWeight:700,color:CL.tx,margin:0}}>Portfolio Summary</h2><p style={{fontSize:11,color:CL.mt,margin:"2px 0 0"}}><span style={{color:CL.am}}>P1: {pLabel(MO,r1s,r1e)}</span> vs <span style={{color:CL.al}}>P2: {pLabel(MO,r2s,r2e)}</span></p></div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:9,marginBottom:14}}>
@@ -719,7 +788,7 @@ function AllOverview(p){
         <tbody>{metrics.map(function(mt){return<tr key={mt.l} style={{borderBottom:"1px solid "+CL.bd+"25"}}><td style={{padding:"6px 5px",fontWeight:600,color:CL.tx}}>{mt.l}</td>{mt.d.map(function(dd,j){var ch=pct(dd.a,dd.b);var bg2=ch>=0?"rgba(34,197,94,0.15)":"rgba(239,68,68,0.15)";return[<td key={j+"b"} style={{padding:"6px 3px",textAlign:"center",color:CL.mt}}>{mt.f(dd.b)}</td>,<td key={j+"a"} style={{padding:"6px 3px",textAlign:"center",color:CL.tx,fontWeight:600}}>{mt.f(dd.a)}</td>,<td key={j+"c"} style={{padding:"6px 5px",textAlign:"center",background:dd.b>0?bg2:"transparent"}}>{dd.b>0?<Pill color={ch>=0?CL.gn:CL.rd}>{ch>=0?"+":""}{ch.toFixed(1)}%</Pill>:<span style={{fontSize:9,color:CL.dm}}>N/A</span>}</td>];})}</tr>;})}</tbody>
       </table>
     </div>
-    <CB title="Net Sales — All Stores" h={280}><ComposedChart data={CD}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return "$"+(v/1000).toFixed(0)+"k";}}/><Tooltip content={TT}/><Line type="monotone" dataKey="cpS" stroke={CL.cp} strokeWidth={2.5} dot={{r:3,fill:CL.cp}} name="ColorProof"/><Line type="monotone" dataKey="nbS" stroke={CL.nb} strokeWidth={2.5} dot={{r:3,fill:CL.nb}} name="NeumaBeauty"/><Line type="monotone" dataKey="n4S" stroke={CL.n4} strokeWidth={2.5} dot={{r:3,fill:CL.n4}} name="Number 4"/></ComposedChart></CB>
+    <CB title="Net Sales — All Stores" h={280}><ComposedChart data={CD}><CartesianGrid strokeDasharray="3 3" stroke={CL.gr}/><XAxis dataKey="m" tick={{fontSize:9,fill:CL.dm}}/><YAxis tick={{fontSize:9,fill:CL.dm}} tickFormatter={function(v){return "$"+(v/1000).toFixed(0)+"k";}}/><Tooltip content={TT}/><Line type="monotone" dataKey="cpS" stroke={CL.cp} strokeWidth={2.5} dot={{r:3,fill:CL.cp}} name="ColorProof"/><Line type="monotone" dataKey="nbS" stroke={CL.nb} strokeWidth={2.5} dot={{r:3,fill:CL.nb}} name="NeumaBeauty"/><Line type="monotone" dataKey="n4S" stroke={CL.n4} strokeWidth={2.5} dot={{r:3,fill:CL.n4}} name="Number 4"/><Line type="monotone" dataKey="cppS" stroke={CL.cpp} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.cpp}} name="CP Pro"/><Line type="monotone" dataKey="nbpS" stroke={CL.nbp} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.nbp}} name="Neuma Pro"/><Line type="monotone" dataKey="n4pS" stroke={CL.n4p} strokeWidth={2} strokeDasharray="4 2" dot={{r:2,fill:CL.n4p}} name="N4 Pro"/></ComposedChart></CB>
   </div>;
 }
 
@@ -729,7 +798,7 @@ function AllOverview(p){
 export default function Dashboard({ data }) {
   var stP=useState("all"),proj=stP[0],setProj=stP[1];
   var stT=useState("overview"),tab=stT[0],setTab=stT[1];
-  var DS = { cp: data.cp || {}, nb: data.nb || {}, n4: data.n4 || {} };
+  var DS = { cp: data.cp || {}, nb: data.nb || {}, n4: data.n4 || {}, cpp: data.cpp || {}, nbp: data.nbp || {}, n4p: data.n4p || {} };
   var MO = data.months || [];
   var maxIdx = MO.length - 1;
 
@@ -739,7 +808,7 @@ export default function Dashboard({ data }) {
   var stR2e=useState(maxIdx),r2e=stR2e[0],setR2e=stR2e[1];
   var stDP=useState(false),showDP=stDP[0],setShowDP=stDP[1];
 
-  var projects=[{id:"all",label:"All Stores",ac:CL.al,icon:"\u2605",nm:"All Stores"},{id:"cp",label:"ColorProof",ac:CL.cp,icon:"C",nm:"ColorProof"},{id:"nb",label:"NeumaBeauty",ac:CL.nb,icon:"N",nm:"NeumaBeauty"},{id:"n4",label:"Number 4",ac:CL.n4,icon:"4",nm:"Number 4 Hair"}];
+  var projects=[{id:"all",label:"All Stores",ac:CL.al,icon:"\u2605",nm:"All Stores"},{id:"cp",label:"ColorProof",ac:CL.cp,icon:"C",nm:"ColorProof"},{id:"nb",label:"NeumaBeauty",ac:CL.nb,icon:"N",nm:"NeumaBeauty"},{id:"n4",label:"Number 4",ac:CL.n4,icon:"4",nm:"Number 4 Hair"},{id:"cpp",label:"CP Pro",ac:CL.cpp,icon:"C+",nm:"Colorproof Pro"},{id:"nbp",label:"Neuma Pro",ac:CL.nbp,icon:"N+",nm:"Neuma Pro"},{id:"n4p",label:"N4 Pro",ac:CL.n4p,icon:"4+",nm:"Number4hair Pro"}];
   var cur=projects[0];for(var pi=0;pi<projects.length;pi++){if(projects[pi].id===proj)cur=projects[pi];}
 
   var tabs=[{id:"overview",label:"Overview"},{id:"sales",label:"Net Sales"},{id:"conversion",label:"Conversion"},{id:"aov",label:"AOV & Orders"},{id:"funnel",label:"Funnel"},{id:"traffic",label:"Traffic"},{id:"campaigns",label:"Campaigns"}];
@@ -748,10 +817,10 @@ export default function Dashboard({ data }) {
 
   function renderTab(){
     if(proj==="all"){
-      var allS={s:MO.map(function(_,i){return(DS.cp.s[i]||0)+(DS.nb.s[i]||0)+(DS.n4.s[i]||0);}),sp:MO.map(function(_,i){return(DS.cp.sp[i]||0)+(DS.nb.sp[i]||0)+(DS.n4.sp[i]||0);})};
-      var allF={se:MO.map(function(_,i){return(DS.cp.se[i]||0)+(DS.nb.se[i]||0)+(DS.n4.se[i]||0);}),ca:MO.map(function(_,i){return(DS.cp.ca[i]||0)+(DS.nb.ca[i]||0)+(DS.n4.ca[i]||0);}),rc:MO.map(function(_,i){return(DS.cp.rc[i]||0)+(DS.nb.rc[i]||0)+(DS.n4.rc[i]||0);}),ck:MO.map(function(_,i){return(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0);})};
-      var allCV={cv:MO.map(function(_,i){var se=(DS.cp.se[i]||0)+(DS.nb.se[i]||0)+(DS.n4.se[i]||0);var ck=(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0);return se>0?(ck/se*100):0;})};
-      var allAOV={av:MO.map(function(_,i){var tS=(DS.cp.s[i]||0)+(DS.nb.s[i]||0)+(DS.n4.s[i]||0);var tO=(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);return tO>0?tS/tO:0;}),ap:MO.map(function(_,i){var tS=(DS.cp.sp[i]||0)+(DS.nb.sp[i]||0)+(DS.n4.sp[i]||0);var tO=(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);return tO>0?tS/tO:0;}),or:MO.map(function(_,i){return(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0);})};
+      var allS={s:MO.map(function(_,i){return(DS.cp.s[i]||0)+(DS.nb.s[i]||0)+(DS.n4.s[i]||0)+(DS.cpp.s[i]||0)+(DS.nbp.s[i]||0)+(DS.n4p.s[i]||0);}),sp:MO.map(function(_,i){return(DS.cp.sp[i]||0)+(DS.nb.sp[i]||0)+(DS.n4.sp[i]||0)+(DS.cpp.sp[i]||0)+(DS.nbp.sp[i]||0)+(DS.n4p.sp[i]||0);})};
+      var allF={se:MO.map(function(_,i){return(DS.cp.se[i]||0)+(DS.nb.se[i]||0)+(DS.n4.se[i]||0)+(DS.cpp.se[i]||0)+(DS.nbp.se[i]||0)+(DS.n4p.se[i]||0);}),ca:MO.map(function(_,i){return(DS.cp.ca[i]||0)+(DS.nb.ca[i]||0)+(DS.n4.ca[i]||0)+(DS.cpp.ca[i]||0)+(DS.nbp.ca[i]||0)+(DS.n4p.ca[i]||0);}),rc:MO.map(function(_,i){return(DS.cp.rc[i]||0)+(DS.nb.rc[i]||0)+(DS.n4.rc[i]||0)+(DS.cpp.rc[i]||0)+(DS.nbp.rc[i]||0)+(DS.n4p.rc[i]||0);}),ck:MO.map(function(_,i){return(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0)+(DS.cpp.ck[i]||0)+(DS.nbp.ck[i]||0)+(DS.n4p.ck[i]||0);})};
+      var allCV={cv:MO.map(function(_,i){var se=(DS.cp.se[i]||0)+(DS.nb.se[i]||0)+(DS.n4.se[i]||0)+(DS.cpp.se[i]||0)+(DS.nbp.se[i]||0)+(DS.n4p.se[i]||0);var ck=(DS.cp.ck[i]||0)+(DS.nb.ck[i]||0)+(DS.n4.ck[i]||0)+(DS.cpp.ck[i]||0)+(DS.nbp.ck[i]||0)+(DS.n4p.ck[i]||0);return se>0?(ck/se*100):0;})};
+      var allAOV={av:MO.map(function(_,i){var tS=(DS.cp.s[i]||0)+(DS.nb.s[i]||0)+(DS.n4.s[i]||0)+(DS.cpp.s[i]||0)+(DS.nbp.s[i]||0)+(DS.n4p.s[i]||0);var tO=(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0)+(DS.cpp.or[i]||0)+(DS.nbp.or[i]||0)+(DS.n4p.or[i]||0);return tO>0?tS/tO:0;}),ap:MO.map(function(_,i){var tS=(DS.cp.sp[i]||0)+(DS.nb.sp[i]||0)+(DS.n4.sp[i]||0)+(DS.cpp.sp[i]||0)+(DS.nbp.sp[i]||0)+(DS.n4p.sp[i]||0);var tO=(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0)+(DS.cpp.or[i]||0)+(DS.nbp.or[i]||0)+(DS.n4p.or[i]||0);return tO>0?tS/tO:0;}),or:MO.map(function(_,i){return(DS.cp.or[i]||0)+(DS.nb.or[i]||0)+(DS.n4.or[i]||0)+(DS.cpp.or[i]||0)+(DS.nbp.or[i]||0)+(DS.n4p.or[i]||0);})};
       if(tab==="overview")return<AllOverview DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="sales")return<StoreSales store={allS} ac={CL.al} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
       if(tab==="conversion")return<AllConversion DS={DS} months={MO} r1s={r1s} r1e={r1e} r2s={r2s} r2e={r2e}/>;
